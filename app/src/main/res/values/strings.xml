@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">TwistApp</string>
+    <string name="app_name_display">Twist</string>
+    <string name="welcome_text">Welcome to</string>
+    <string name="subtitle_text">Make your first twist now!</string>
+    <string name="logo_description">Logo</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_add">Add</string>
+    <string name="nav_likes">Likes</string>
+    <string name="nav_profile">Profile</string>
+</resources>

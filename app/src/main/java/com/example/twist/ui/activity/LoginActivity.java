@@ -2,8 +2,6 @@ package com.example.twist.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -12,27 +10,21 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.twist.R;
-import com.example.twist.model.request.LoginRequest;
-import com.example.twist.model.response.AuthResponse;
-import com.example.twist.repository.AuthRepository;
+import com.example.twist.api.ApiClient;
+import com.example.twist.api.ApiService;
+import com.example.twist.model.auth.AuthRequest;
+import com.example.twist.model.auth.AuthResponse;
 import com.example.twist.util.SessionManager;
-import com.example.twist.util.ValidationUtil;
-
-import org.json.JSONObject;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
-
-    private static final String TAG = "LoginActivity";
-
-    private EditText usernameEditText, passwordEditText;
-    private Button loginButton;
-    private TextView forgotPasswordTextView, signUpTextView;
-
-    private AuthRepository authRepository;
+    private EditText etUsername, etPassword;
+    private Button btnLogin;
+    private TextView tvSignUp, tvForgotPassword;
+    private ApiService apiService;
     private SessionManager sessionManager;
 
     @Override
@@ -40,139 +32,56 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        initComponents();
-        initViews();
-        setListeners();
-    }
+        etUsername = findViewById(R.id.username);
+        etPassword = findViewById(R.id.password);
+        btnLogin = findViewById(R.id.btnLogin);
+        tvSignUp = findViewById(R.id.tvSignUp);
+        tvForgotPassword = findViewById(R.id.tvForgotPassword);
 
-    private void initComponents() {
-        authRepository = new AuthRepository();
+        apiService = ApiClient.getClient().create(ApiService.class);
         sessionManager = new SessionManager(this);
-    }
 
-    private void initViews() {
-        usernameEditText = findViewById(R.id.username);
-        passwordEditText = findViewById(R.id.password);
-        loginButton = findViewById(R.id.btnLogin);
-        forgotPasswordTextView = findViewById(R.id.tvForgotPassword);
-        signUpTextView = findViewById(R.id.tvSignUp);
-    }
+        btnLogin.setOnClickListener(v -> login());
 
-    private void setListeners() {
-        loginButton.setOnClickListener(v -> attemptLogin());
-
-        forgotPasswordTextView.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
+        tvSignUp.setOnClickListener(v -> {
+            startActivity(new Intent(this, SignupActivity.class));
         });
 
-        signUpTextView.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, SignupActivity.class));
+        tvForgotPassword.setOnClickListener(v -> {
+            startActivity(new Intent(this, ForgotPasswordActivity.class));
         });
     }
 
-    private void attemptLogin() {
-        clearErrors();
+    private void login() {
+        String username = etUsername.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
 
-        String username = usernameEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
-
-        if (!validateInputs(username, password)) return;
-
-        performLogin(username, password);
-    }
-
-    private void clearErrors() {
-        usernameEditText.setError(null);
-        passwordEditText.setError(null);
-    }
-
-    private boolean validateInputs(String username, String password) {
-        boolean isValid = true;
-        View focusView = null;
-
-        if (!ValidationUtil.isValidPassword(password)) {
-            passwordEditText.setError("Password must be at least 6 characters");
-            focusView = passwordEditText;
-            isValid = false;
+        if (username.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Username dan Password wajib diisi", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        if (!ValidationUtil.isValidUsername(username)) {
-            usernameEditText.setError("Username is required");
-            focusView = usernameEditText;
-            isValid = false;
-        }
-
-        if (focusView != null) focusView.requestFocus();
-
-        return isValid;
-    }
-
-    private void performLogin(String username, String password) {
-        setLoginButtonState(false, "Logging in...");
-
-        LoginRequest request = new LoginRequest(username, password);
-        Call<AuthResponse> call = authRepository.login(request);
-
-        call.enqueue(new Callback<AuthResponse>() {
+        Call<AuthResponse> call = apiService.login(new AuthRequest(username, password));
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
-                setLoginButtonState(true, "Login");
-
                 if (response.isSuccessful() && response.body() != null) {
-                    handleLoginSuccess(response.body());
+                    sessionManager.saveToken(response.body().getToken());
+                    Toast.makeText(LoginActivity.this, "Login berhasil", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
                 } else {
-                    handleLoginError(response);
+                    Toast.makeText(LoginActivity.this, "Login gagal. Periksa kembali kredensial Anda.", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
-                setLoginButtonState(true, "Login");
-                Log.e(TAG, "Network failure: " + t.getMessage());
-                showError("Network error: " + t.getMessage());
+                Toast.makeText(LoginActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
-
-    private void handleLoginSuccess(AuthResponse response) {
-        AuthResponse.User user = response.getUser();
-        sessionManager.saveUserSession(
-                response.getToken(),
-                user.getId(),
-                user.getUsername(),
-                user.getEmail()
-        );
-
-        Toast.makeText(this, "Welcome back, " + user.getUsername() + "!", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
-    }
-
-    private void handleLoginError(Response<AuthResponse> response) {
-        try {
-            String errorBody = response.errorBody().string();
-            JSONObject errorJson = new JSONObject(errorBody);
-            String errorMessage = errorJson.optString("error", "Login failed");
-            showLoginError(errorMessage);
-        } catch (Exception e) {
-            showError("Login failed. Please try again.");
-        }
-    }
-
-    private void showLoginError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-        passwordEditText.setText("");
-        usernameEditText.requestFocus();
-    }
-
-    private void showError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    }
-
-    private void setLoginButtonState(boolean enabled, String text) {
-        loginButton.setEnabled(enabled);
-        loginButton.setText(text);
-    }
 }
+

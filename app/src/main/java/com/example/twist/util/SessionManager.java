@@ -4,27 +4,23 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 public class SessionManager {
-    private final SharedPreferences sharedPreferences;
-    private final SharedPreferences.Editor editor;
+    private static final String PREF_NAME = "twist_session";
+    private static final String KEY_TOKEN = "token";
+    private SharedPreferences prefs;
 
     public SessionManager(Context context) {
-        sharedPreferences = context.getSharedPreferences(Constants.SHARED_PREF_NAME, Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
+        prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
-    public void saveUserSession(String token, int userId, String username, String email) {
-        editor.putString(Constants.KEY_TOKEN, token);
-        editor.putInt(Constants.KEY_USER_ID, userId);
-        editor.putString(Constants.KEY_USERNAME, username);
-        editor.putString(Constants.KEY_EMAIL, email);
-        editor.putBoolean(Constants.KEY_IS_LOGGED_IN, true);
-        editor.apply();
+    public void saveToken(String token) {
+        prefs.edit().putString(KEY_TOKEN, token).apply();
     }
 
-    public String getToken() { return sharedPreferences.getString(Constants.KEY_TOKEN, ""); }
-    public int getUserId() { return sharedPreferences.getInt(Constants.KEY_USER_ID, -1); }
-    public String getUsername() { return sharedPreferences.getString(Constants.KEY_USERNAME, ""); }
-    public String getEmail() { return sharedPreferences.getString(Constants.KEY_EMAIL, ""); }
-    public boolean isLoggedIn() { return sharedPreferences.getBoolean(Constants.KEY_IS_LOGGED_IN, false); }
-    public void clearSession() { editor.clear().apply(); }
+    public String getToken() {
+        return prefs.getString(KEY_TOKEN, null);
+    }
+
+    public void clearSession() {
+        prefs.edit().clear().apply();
+    }
 }

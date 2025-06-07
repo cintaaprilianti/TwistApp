@@ -137,7 +137,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
         android:text="Don't have an account? "
-        android:textColor="@android:color/black"
+        android:textColor="#808080"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/tvSignUp"

@@ -14,6 +14,7 @@ import com.example.twist.api.ApiClient;
 import com.example.twist.api.ApiService;
 import com.example.twist.model.auth.AuthRequest;
 import com.example.twist.model.auth.AuthResponse;
+import com.google.gson.Gson;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -55,17 +56,27 @@ public class SignupActivity extends AppCompatActivity {
                 return;
             }
 
-            AuthRequest request = new AuthRequest(username, email, password, confirmPassword);
+            AuthRequest request = new AuthRequest(username, password, email, confirmPassword);
 
             apiService.register(request).enqueue(new Callback<AuthResponse>() {
                 @Override
                 public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
-                    if (response.isSuccessful()) {
+                    if (response.isSuccessful() && response.body() != null) {
                         Toast.makeText(SignupActivity.this, "Registrasi berhasil", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(SignupActivity.this, LoginActivity.class));
                         finish();
                     } else {
-                        Toast.makeText(SignupActivity.this, "Registrasi gagal: " + response.message(), Toast.LENGTH_SHORT).show();
+                        // Parsing error message dari response
+                        try {
+                            String errorMessage = parseErrorMessage(response);
+                            if (errorMessage != null && errorMessage.contains("sudah digunakan")) {
+                                Toast.makeText(SignupActivity.this, "Username atau email sudah digunakan", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(SignupActivity.this, "Registrasi gagal: " + (errorMessage != null ? errorMessage : response.message()), Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Toast.makeText(SignupActivity.this, "Registrasi gagal: " + response.message(), Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
 
@@ -80,5 +91,29 @@ public class SignupActivity extends AppCompatActivity {
             startActivity(new Intent(SignupActivity.this, LoginActivity.class));
             finish();
         });
+    }
+
+    private String parseErrorMessage(Response<?> response) {
+        if (response.errorBody() != null) {
+            try {
+                return new Gson().fromJson(response.errorBody().string(), ErrorResponse.class).getError();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    // Model sederhana untuk parsing error response
+    private static class ErrorResponse {
+        private String error;
+
+        public String getError() {
+            return error;
+        }
+
+        public void setError(String error) {
+            this.error = error;
+        }
     }
 }

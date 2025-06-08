@@ -17,28 +17,19 @@
         android:theme="@style/Theme.Twist"
         tools:targetApi="31">
         <activity
-            android:name=".ui.activity.EditProfileActivity"
+            android:name=".activity.post.AddTwistActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.ProfileActivity"
+            android:name=".activity.profile.EditProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.ResetPasswordActivity"
+            android:name=".activity.profile.ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.HomeActivity"
+            android:name=".activity.user.ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.ForgotPasswordActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.activity.SignupActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.activity.LoginActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.activity.SplashActivity"
+            android:name=".activity.auth.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -46,6 +37,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activity.auth.LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.auth.SignupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.auth.ForgotPasswordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.auth.ResetPasswordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.home.HomeActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

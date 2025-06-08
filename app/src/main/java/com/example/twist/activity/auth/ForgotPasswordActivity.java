@@ -1,4 +1,4 @@
-package com.example.twist.ui.activity;
+package com.example.twist.activity.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,6 +14,7 @@ import com.example.twist.api.ApiClient;
 import com.example.twist.api.ApiService;
 import com.example.twist.model.auth.AuthRequest;
 import com.example.twist.model.auth.AuthResponse;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -62,13 +63,13 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 btnContinue.setEnabled(true);
                 if (response.isSuccessful() && response.body() != null) {
                     AuthResponse authResponse = response.body();
-                    Toast.makeText(ForgotPasswordActivity.this, authResponse.getMessage() + "\nReset Link: " + authResponse.getResetLink(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(com.example.twist.activity.auth.ForgotPasswordActivity.this, authResponse.getMessage() + "\nReset Link: " + authResponse.getResetLink(), Toast.LENGTH_LONG).show();
                     String token = authResponse.getResetToken();
                     if (token != null) {
                         startResetPasswordActivity(token);
                     }
                 } else {
-                    Toast.makeText(ForgotPasswordActivity.this, "Failed to send reset request", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(com.example.twist.activity.auth.ForgotPasswordActivity.this, "Failed to send reset request", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -76,13 +77,13 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             public void onFailure(Call<AuthResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 btnContinue.setEnabled(true);
-                Toast.makeText(ForgotPasswordActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(com.example.twist.activity.auth.ForgotPasswordActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void startResetPasswordActivity(String token) {
-        Intent intent = new Intent(ForgotPasswordActivity.this, ResetPasswordActivity.class);
+        Intent intent = new Intent(com.example.twist.activity.auth.ForgotPasswordActivity.this, ResetPasswordActivity.class);
         intent.putExtra("resetToken", token);
         startActivity(intent);
         finish();

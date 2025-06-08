@@ -1,4 +1,4 @@
-package com.example.twist.ui.activity;
+package com.example.twist.activity.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -62,33 +62,33 @@ public class SignupActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        Toast.makeText(SignupActivity.this, "Registrasi berhasil", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(SignupActivity.this, LoginActivity.class));
+                        Toast.makeText(com.example.twist.activity.auth.SignupActivity.this, "Registrasi berhasil", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(com.example.twist.activity.auth.SignupActivity.this, com.example.twist.activity.auth.LoginActivity.class));
                         finish();
                     } else {
                         // Parsing error message dari response
                         try {
                             String errorMessage = parseErrorMessage(response);
                             if (errorMessage != null && errorMessage.contains("sudah digunakan")) {
-                                Toast.makeText(SignupActivity.this, "Username atau email sudah digunakan", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(com.example.twist.activity.auth.SignupActivity.this, "Username atau email sudah digunakan", Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(SignupActivity.this, "Registrasi gagal: " + (errorMessage != null ? errorMessage : response.message()), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(com.example.twist.activity.auth.SignupActivity.this, "Registrasi gagal: " + (errorMessage != null ? errorMessage : response.message()), Toast.LENGTH_SHORT).show();
                             }
                         } catch (Exception e) {
-                            Toast.makeText(SignupActivity.this, "Registrasi gagal: " + response.message(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(com.example.twist.activity.auth.SignupActivity.this, "Registrasi gagal: " + response.message(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
 
                 @Override
                 public void onFailure(Call<AuthResponse> call, Throwable t) {
-                    Toast.makeText(SignupActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(com.example.twist.activity.auth.SignupActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
         });
 
         tvLogin.setOnClickListener(v -> {
-            startActivity(new Intent(SignupActivity.this, LoginActivity.class));
+            startActivity(new Intent(com.example.twist.activity.auth.SignupActivity.this, LoginActivity.class));
             finish();
         });
     }
@@ -96,7 +96,7 @@ public class SignupActivity extends AppCompatActivity {
     private String parseErrorMessage(Response<?> response) {
         if (response.errorBody() != null) {
             try {
-                return new Gson().fromJson(response.errorBody().string(), ErrorResponse.class).getError();
+                return new Gson().fromJson(response.errorBody().string(), com.example.twist.activity.auth.SignupActivity.ErrorResponse.class).getError();
             } catch (Exception e) {
                 return null;
             }

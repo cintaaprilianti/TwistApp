@@ -1,4 +1,4 @@
-package com.example.twist.ui.activity;
+package com.example.twist.activity.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -67,19 +67,19 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     sessionManager.saveToken(response.body().getToken());
-                    Toast.makeText(LoginActivity.this, "Login berhasil", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(com.example.twist.activity.auth.LoginActivity.this, "Login berhasil", Toast.LENGTH_SHORT).show();
 
-                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                    Intent intent = new Intent(com.example.twist.activity.auth.LoginActivity.this, com.example.twist.activity.home.HomeActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 } else {
-                    Toast.makeText(LoginActivity.this, "Login gagal. Periksa kembali kredensial Anda.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(com.example.twist.activity.auth.LoginActivity.this, "Login gagal. Periksa kembali kredensial Anda.", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
-                Toast.makeText(LoginActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(com.example.twist.activity.auth.LoginActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

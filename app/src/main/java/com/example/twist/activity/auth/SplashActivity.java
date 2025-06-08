@@ -1,4 +1,4 @@
-package com.example.twist.ui.activity;
+package com.example.twist.activity.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,7 +19,7 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void run() {
 
-                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+                Intent intent = new Intent(com.example.twist.activity.auth.SplashActivity.this, LoginActivity.class);
                 startActivity(intent);
                 finish();
             }

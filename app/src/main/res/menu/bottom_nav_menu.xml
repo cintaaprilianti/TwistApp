@@ -3,21 +3,19 @@
     <item
         android:id="@+id/nav_home"
         android:icon="@drawable/home"
-        android:title="Home"/>
-    <item
-        android:id="@+id/nav_search"
-        android:icon="@drawable/search"
-        android:title="Search"/>
+        android:title="Home"
+        android:layout_width="60dp"
+        android:layout_height="60dp"/>
     <item
         android:id="@+id/nav_add"
         android:icon="@drawable/add"
-        android:title="Add"/>
-    <item
-        android:id="@+id/nav_likes"
-        android:icon="@drawable/love"
-        android:title="Likes"/>
+        android:title="Add"
+        android:layout_width="60dp"
+        android:layout_height="60dp"/>
     <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/profile"
-        android:title="Profile"/>
+        android:title="Profile"
+        android:layout_width="60dp"
+        android:layout_height="60dp"/>
 </menu>

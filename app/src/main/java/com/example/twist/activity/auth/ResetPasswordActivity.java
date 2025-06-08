@@ -1,4 +1,4 @@
-package com.example.twist.ui.activity;
+package com.example.twist.activity.auth;
 
 import android.os.Bundle;
 import android.view.View;
@@ -74,10 +74,10 @@ public class ResetPasswordActivity extends AppCompatActivity {
                 btnSaveChanges.setEnabled(true);
                 if (response.isSuccessful() && response.body() != null) {
                     AuthResponse authResponse = response.body();
-                    Toast.makeText(ResetPasswordActivity.this, authResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(com.example.twist.activity.auth.ResetPasswordActivity.this, authResponse.getMessage(), Toast.LENGTH_SHORT).show();
                     finish();
                 } else {
-                    Toast.makeText(ResetPasswordActivity.this, "Failed to reset password", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(com.example.twist.activity.auth.ResetPasswordActivity.this, "Failed to reset password", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -85,7 +85,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
             public void onFailure(Call<AuthResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 btnSaveChanges.setEnabled(true);
-                Toast.makeText(ResetPasswordActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(com.example.twist.activity.auth.ResetPasswordActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

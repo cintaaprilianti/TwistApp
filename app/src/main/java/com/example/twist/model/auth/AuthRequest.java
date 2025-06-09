@@ -7,7 +7,6 @@ public class AuthRequest {
     private String confirmPassword;
     private String token; // Untuk reset password
 
-    // Constructor untuk register
     public AuthRequest(String username, String password, String email, String confirmPassword) {
         this.username = username;
         this.password = password;
@@ -15,25 +14,21 @@ public class AuthRequest {
         this.confirmPassword = confirmPassword;
     }
 
-    // Constructor untuk login
     public AuthRequest(String username, String password) {
         this.username = username;
         this.password = password;
     }
 
-    // Constructor untuk forgot password
     public AuthRequest(String email) {
         this.email = email;
     }
 
-    // Constructor untuk reset password
     public AuthRequest(String token, String password, String confirmPassword) {
         this.token = token;
         this.password = password;
         this.confirmPassword = confirmPassword;
     }
 
-    // Getters and setters
     public String getUsername() {
         return username;
     }

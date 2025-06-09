@@ -53,7 +53,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         btnContinue.setEnabled(false);
 
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
-        AuthRequest request = new AuthRequest(email); // Gunakan constructor untuk forgot password
+        AuthRequest request = new AuthRequest(email);
         Call<AuthResponse> call = apiService.forgotPassword(request);
 
         call.enqueue(new Callback<AuthResponse>() {

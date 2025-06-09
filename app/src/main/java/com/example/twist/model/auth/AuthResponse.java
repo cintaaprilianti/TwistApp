@@ -4,8 +4,8 @@ public class AuthResponse {
     private User user;
     private String token;
     private String message;
-    private String resetToken; // Untuk forgot password
-    private String resetLink; // Untuk forgot password
+    private String resetToken;
+    private String resetLink;
 
     public User getUser() {
         return user;

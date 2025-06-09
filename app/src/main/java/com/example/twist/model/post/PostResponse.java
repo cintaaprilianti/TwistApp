@@ -1,7 +1,7 @@
 package com.example.twist.model.post;
 
+import com.example.twist.model.profile.ProfileResponse;
 import com.google.gson.annotations.SerializedName;
-import java.util.Date;
 
 public class PostResponse {
     @SerializedName("id")
@@ -9,6 +9,9 @@ public class PostResponse {
 
     @SerializedName("content")
     private String content;
+
+    @SerializedName("user")
+    private ProfileResponse user;
 
     @SerializedName("likeCount")
     private int likeCount;
@@ -19,60 +22,53 @@ public class PostResponse {
     @SerializedName("repostCount")
     private int repostCount;
 
-    @SerializedName("createdAt")
-    private Date createdAt;
+    @SerializedName("isQuotePost")
+    private boolean isQuotePost;
 
-    @SerializedName("updatedAt")
-    private Date updatedAt;
+    @SerializedName("parentPostId")
+    private Integer parentPostId; // Nullable, karena tidak semua post adalah reply
 
-    @SerializedName("isEdited")
-    private boolean isEdited;
+    // Placeholder untuk isLiked (harus diisi dari backend atau logika lokal)
+    private boolean isLiked;
 
-    @SerializedName("isPinned")
-    private boolean isPinned;
+    public int getId() {
+        return id;
+    }
 
-    @SerializedName("user")
-    private User user;
-
-    public int getId() { return id; }
     public String getContent() {
-        return content;
+        return content != null ? content : "";
     }
-    public int getLikeCount() {
-        return likeCount;
-    }
-    public int getCommentCount() {
-        return commentCount;
-    }
-    public int getRepostCount() {
-        return repostCount;
-    }
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-    public boolean isEdited() {
-        return isEdited;
-    }
-    public boolean isPinned() {
-        return isPinned;
-    }
-    public User getUser() {
+
+    public ProfileResponse getUser() {
         return user;
     }
 
-    public static class User {
-        @SerializedName("id")
-        private int id;
+    public int getLikeCount() {
+        return likeCount;
+    }
 
-        @SerializedName("username")
-        private String username;
+    public int getCommentCount() {
+        return commentCount;
+    }
 
-        public int getId() { return id; }
-        public String getUsername() {
-            return username;
-        }
+    public int getRepostCount() {
+        return repostCount;
+    }
+
+    public boolean getIsQuotePost() {
+        return isQuotePost;
+    }
+
+    public Integer getParentPostId() {
+        return parentPostId;
+    }
+
+    public boolean getIsLiked() {
+        return isLiked; // Bisa diatur dari response backend
+    }
+
+    // Setter untuk isLiked (opsional, untuk pengujian atau logika lokal)
+    public void setIsLiked(boolean isLiked) {
+        this.isLiked = isLiked;
     }
 }

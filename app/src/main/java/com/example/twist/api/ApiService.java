@@ -7,6 +7,7 @@ import com.example.twist.model.post.PostPayload;
 import com.example.twist.model.profile.ProfileResponse;
 
 import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -27,13 +28,13 @@ public interface ApiService {
     @POST("auth/reset-password")
     Call<AuthResponse> resetPassword(@Body AuthRequest request);
 
-    @GET("auth/")
+    @GET("posts")
     Call<List<PostResponse>> getPosts(@Header("Authorization") String token);
 
-    @POST("posts/")
+    @POST("posts")
     Call<Void> createPost(@Header("Authorization") String token, @Body PostPayload postPayload);
 
-    @GET("profile/")
+    @GET("profile")
     Call<ProfileResponse> getProfile(@Header("Authorization") String token);
 
     @GET("profile/posts")

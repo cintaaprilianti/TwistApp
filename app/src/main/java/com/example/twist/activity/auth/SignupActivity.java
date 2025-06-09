@@ -66,7 +66,6 @@ public class SignupActivity extends AppCompatActivity {
                         startActivity(new Intent(com.example.twist.activity.auth.SignupActivity.this, com.example.twist.activity.auth.LoginActivity.class));
                         finish();
                     } else {
-                        // Parsing error message dari response
                         try {
                             String errorMessage = parseErrorMessage(response);
                             if (errorMessage != null && errorMessage.contains("sudah digunakan")) {

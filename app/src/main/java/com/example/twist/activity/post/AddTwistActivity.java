@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +21,7 @@ import com.example.twist.activity.home.HomeActivity;
 import com.example.twist.api.ApiClient;
 import com.example.twist.api.ApiService;
 import com.example.twist.model.post.PostPayload;
+import com.google.gson.Gson;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -39,20 +41,17 @@ public class AddTwistActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_twist);
 
-        // Inisialisasi komponen
         quoteInput = findViewById(R.id.quoteInput);
         postButton = findViewById(R.id.postButton);
         backButton = findViewById(R.id.backButton);
         characterCounter = findViewById(R.id.characterCounter);
 
-        // Set up Toolbar
         Toolbar toolbar = findViewById(R.id.toolbarContainer);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
-        // Inisialisasi ApiService dengan ApiClient
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
 
         // Aksi untuk Post Button
@@ -60,6 +59,8 @@ public class AddTwistActivity extends AppCompatActivity {
             String quoteContent = quoteInput.getText().toString().trim();
             if (!quoteContent.isEmpty() && quoteContent.length() <= MAX_CHARACTERS) {
                 String token = getTokenFromStorage();
+                Log.d("AddTwistActivity", "Token: " + (token != null ? token : "null"));
+                Log.d("AddTwistActivity", "Payload: " + new Gson().toJson(new PostPayload(quoteContent)));
                 if (token != null) {
                     postQuote(apiService, token, quoteContent);
                 } else {
@@ -75,7 +76,7 @@ public class AddTwistActivity extends AppCompatActivity {
         // Aksi untuk Back Button
         backButton.setOnClickListener(v -> onBackPressed());
 
-        // Tambahkan TextWatcher untuk menghitung karakter
+        // TextWatcher untuk menghitung karakter
         quoteInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -102,35 +103,23 @@ public class AddTwistActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(AddTwistActivity.this, "Twist posted successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddTwistActivity.this, "Twist berhasil diposting", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(AddTwistActivity.this, HomeActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                     finish();
                 } else {
-                    Toast.makeText(AddTwistActivity.this, "Gagal memposting twist", Toast.LENGTH_SHORT).show();
+                    Log.e("AddTwistActivity", "Error: " + response.code() + ", Body: " + (response.errorBody() != null ? response.errorBody().toString() : "No detail"));
+                    Toast.makeText(AddTwistActivity.this, "Gagal memposting twist: Kode " + response.code() + " - " + (response.errorBody() != null ? response.errorBody().toString() : "Tidak ada detail"), Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(AddTwistActivity.this, "Koneksi bermasalah", Toast.LENGTH_SHORT).show();
+                Log.e("AddTwistActivity", "Network error: " + t.getMessage());
+                Toast.makeText(AddTwistActivity.this, "Koneksi bermasalah: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-    }
-
-    private boolean onNavigationItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.nav_home) {
-            startActivity(new Intent(this, HomeActivity.class));
-            return true;
-        } else if (id == R.id.nav_add) {
-            return true;
-        } else if (id == R.id.nav_profile) {
-            Toast.makeText(this, "Fitur Profile belum diimplementasikan", Toast.LENGTH_SHORT).show();
-            return true;
-        }
-        return false;
     }
 
     private String getTokenFromStorage() {

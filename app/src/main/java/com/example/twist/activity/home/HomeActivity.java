@@ -3,6 +3,7 @@ package com.example.twist.activity.home;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -50,20 +51,30 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
 
         // Inisialisasi Presenter dengan ApiClient
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
-        presenter = new HomePresenter(this, apiService, getTokenFromStorage());
+        String token = getTokenFromStorage();
+        // Log token untuk debugging, jangan tampilkan di UI
+        Log.d("HomeActivity", "Token: " + (token != null ? token : "null"));
+        presenter = new HomePresenter(this, apiService, token);
 
         // Set up Bottom Navigation
         bottomNav.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
 
-        // Muat data
-        presenter.loadData();
+        // Muat data jika token tersedia
+        if (token != null) {
+            presenter.loadData();
+        } else {
+            Toast.makeText(this, "Silakan login untuk melihat twist", Toast.LENGTH_LONG).show();
+            // Redirect ke LoginActivity jika perlu
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         // Muat ulang data saat kembali ke HomeActivity
-        presenter.loadData();
+        if (getTokenFromStorage() != null) {
+            presenter.loadData();
+        }
     }
 
     private boolean onNavigationItemSelected(MenuItem item) {
@@ -81,9 +92,8 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
     }
 
     private String getTokenFromStorage() {
-        // Implementasi logika untuk mengambil token dari SharedPreferences
         SharedPreferences prefs = getSharedPreferences("TwistPrefs", MODE_PRIVATE);
-        return prefs.getString("auth_token", null); // Ganti dengan key token Anda
+        return prefs.getString("auth_token", null);
     }
 
     @Override
@@ -106,7 +116,7 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
 
     @Override
     public void showError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     @Override

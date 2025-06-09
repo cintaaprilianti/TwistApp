@@ -4,8 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 public class SessionManager {
-    private static final String PREF_NAME = "twist_session";
-    private static final String KEY_TOKEN = "token";
+    private static final String PREF_NAME = "TwistPrefs";
+    private static final String KEY_TOKEN = "auth_token";
     private SharedPreferences prefs;
 
     public SessionManager(Context context) {

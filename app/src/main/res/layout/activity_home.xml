@@ -8,7 +8,6 @@
     android:background="@color/white"
     tools:context=".activity.home.HomeActivity">
 
-    <!-- Search Bar di atas -->
     <EditText
         android:id="@+id/search_bar"
         android:layout_width="0dp"
@@ -29,7 +28,6 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp" />
 
-    <!-- Logo di bawah search bar -->
     <ImageView
         android:id="@+id/logoImage"
         android:layout_width="80dp"
@@ -72,7 +70,6 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp" />
 
-    <!-- Bottom Navigation dengan background putih dan icon yang lebih besar -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="0dp"

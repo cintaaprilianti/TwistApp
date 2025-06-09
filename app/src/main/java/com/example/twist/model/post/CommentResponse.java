@@ -1,41 +1,34 @@
 package com.example.twist.model.post;
 
-public class CommentResponse {
-    private int id;
-    private String content;
-    private int userId;
-    private String username;
-    private String createdAt;
+import com.example.twist.model.profile.ProfileResponse;
+import com.google.gson.annotations.SerializedName;
 
-    // Getter dan Setter
+public class CommentResponse {
+    @SerializedName("id")
+    private int id;
+
+    @SerializedName("content")
+    private String content;
+
+    @SerializedName("user")
+    private ProfileResponse user;
+
+    @SerializedName("createdAt")
+    private String createdAt; // atau Date jika backend mengembalikan format tanggal
+
     public int getId() {
         return id;
     }
-    public void setId(int id) {
-        this.id = id;
-    }
+
     public String getContent() {
-        return content;
+        return content != null ? content : "";
     }
-    public void setContent(String content) {
-        this.content = content;
+
+    public ProfileResponse getUser() {
+        return user;
     }
-    public int getUserId() {
-        return userId;
-    }
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-    public String getUsername() {
-        return username;
-    }
-    public void setUsername(String username) {
-        this.username = username;
-    }
+
     public String getCreatedAt() {
-        return createdAt;
-    }
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
+        return createdAt != null ? createdAt : "";
     }
 }

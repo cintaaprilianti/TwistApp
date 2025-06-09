@@ -26,10 +26,13 @@ public class PostResponse {
     private boolean isQuotePost;
 
     @SerializedName("parentPostId")
-    private Integer parentPostId; // Nullable, karena tidak semua post adalah reply
+    private Integer parentPostId; // Nullable
 
-    // Placeholder untuk isLiked (harus diisi dari backend atau logika lokal)
+    @SerializedName("isLiked")
     private boolean isLiked;
+
+    @SerializedName("isReposted")
+    private boolean isReposted; // Tambahan untuk status repost
 
     public int getId() {
         return id;
@@ -64,11 +67,19 @@ public class PostResponse {
     }
 
     public boolean getIsLiked() {
-        return isLiked; // Bisa diatur dari response backend
+        return isLiked;
     }
 
-    // Setter untuk isLiked (opsional, untuk pengujian atau logika lokal)
+    public boolean getIsReposted() {
+        return isReposted;
+    }
+
+    // Setter untuk pengujian atau logika lokal
     public void setIsLiked(boolean isLiked) {
         this.isLiked = isLiked;
+    }
+
+    public void setIsReposted(boolean isReposted) {
+        this.isReposted = isReposted;
     }
 }

@@ -17,6 +17,12 @@
         android:theme="@style/Theme.Twist"
         tools:targetApi="31">
         <activity
+            android:name=".activity.post.CommentListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.post.CommentActivity"
+            android:exported="false" />
+        <activity
             android:name=".fragment.FollowersFragment"
             android:exported="false" />
         <activity

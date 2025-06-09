@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.twist.R;
 import com.example.twist.activity.post.AddTwistActivity;
+import com.example.twist.activity.post.CommentActivity;
+import com.example.twist.activity.post.CommentListActivity;
 import com.example.twist.api.ApiClient;
 import com.example.twist.api.ApiService;
 import com.example.twist.adapter.TwistAdapter;
@@ -52,12 +54,38 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
         // Inisialisasi Presenter dengan ApiClient
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
         String token = getTokenFromStorage();
-        // Log token untuk debugging, jangan tampilkan di UI
         Log.d("HomeActivity", "Token: " + (token != null ? token : "null"));
         presenter = new HomePresenter(this, apiService, token);
 
         // Set up Bottom Navigation
         bottomNav.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
+
+        // Set listener untuk interaksi item
+        twistAdapter.setOnItemInteractionListener(new TwistAdapter.OnItemInteractionListener() {
+            @Override
+            public void onLikeClicked(int postId) {
+                Log.d("HomeActivity", "Like clicked for postId: " + postId); // Debug
+                presenter.likePost(postId);
+            }
+
+            @Override
+            public void onRepostClicked(int postId) {
+                Log.d("HomeActivity", "Repost clicked for postId: " + postId); // Debug
+                presenter.repostPost(postId);
+            }
+
+            @Override
+            public void onCommentClicked(int postId) {
+                Log.d("HomeActivity", "Comment clicked for postId: " + postId); // Debug
+                presenter.commentPost(postId);
+            }
+
+            @Override
+            public void onViewCommentsClicked(int postId) {
+                Log.d("HomeActivity", "View Comments clicked for postId: " + postId); // Debug
+                presenter.viewComments(postId);
+            }
+        });
 
         // Muat data jika token tersedia
         if (token != null) {
@@ -127,5 +155,19 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
     @Override
     public void hideLoading() {
         // Implementasi hide loading jika diperlukan
+    }
+
+    @Override
+    public void showCommentInput(int postId) {
+        Intent intent = new Intent(this, CommentActivity.class);
+        intent.putExtra("postId", postId);
+        startActivity(intent);
+    }
+
+    @Override
+    public void showCommentList(int postId) {
+        Intent intent = new Intent(this, CommentListActivity.class);
+        intent.putExtra("postId", postId);
+        startActivity(intent);
     }
 }

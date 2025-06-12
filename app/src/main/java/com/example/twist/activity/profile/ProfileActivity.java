@@ -8,6 +8,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -40,6 +42,7 @@ public class ProfileActivity extends AppCompatActivity {
     private String currentUsername;
     private int currentUserId;
     private SessionManager sessionManager;
+    private ActivityResultLauncher<Intent> editProfileLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,13 +75,30 @@ public class ProfileActivity extends AppCompatActivity {
             return;
         }
 
+        // Initialize ActivityResultLauncher
+        editProfileLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        // Update currentUsername from sessionManager
+                        currentUsername = sessionManager.getUsername();
+                        if (currentUsername == null) {
+                            Toast.makeText(this, "Username tidak tersedia", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                        loadProfile(); // Refresh profile data
+                    }
+                }
+        );
+
         loadProfile();
         setupViewPager();
 
         editProfileButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, EditProfileActivity.class);
             intent.putExtra("username", currentUsername);
-            startActivity(intent);
+            editProfileLauncher.launch(intent); // Launch with ActivityResultLauncher
         });
 
         menuButton.setOnClickListener(v -> showSettingsMenu());

@@ -6,6 +6,8 @@ public class User {
     private String followersCount;
     private int profileImageResource;
 
+    public User() {} // diperlukan untuk GSON
+
     public User(String id, String username, String followersCount, int profileImageResource) {
         this.id = id;
         this.username = username;
@@ -13,7 +15,6 @@ public class User {
         this.profileImageResource = profileImageResource;
     }
 
-    // Getters
     public String getId() {
         return id;
     }
@@ -30,7 +31,6 @@ public class User {
         return profileImageResource;
     }
 
-    // Setters
     public void setId(String id) {
         this.id = id;
     }

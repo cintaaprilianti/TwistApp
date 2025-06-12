@@ -3,6 +3,7 @@ package com.example.twist.activity.profile;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -51,6 +52,12 @@ public class EditProfileActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         btnSaveChanges = findViewById(R.id.btnSaveChanges);
 
+        if (currentUsername == null) {
+            Toast.makeText(this, "Username tidak tersedia", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         loadCurrentProfile();
 
         backButton.setOnClickListener(v -> onBackPressed());
@@ -94,6 +101,7 @@ public class EditProfileActivity extends AppCompatActivity {
             });
         } else {
             Toast.makeText(this, "Token autentikasi atau username tidak ada", Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
 
@@ -105,8 +113,25 @@ public class EditProfileActivity extends AppCompatActivity {
             String newBio = etBio.getText().toString().trim();
             String newEmail = etEmail.getText().toString().trim();
 
-            if (newDisplayName.isEmpty() || newUsername.isEmpty() || newEmail.isEmpty()) {
-                Toast.makeText(this, "Harap isi semua kolom wajib", Toast.LENGTH_SHORT).show();
+            // Validate inputs
+            if (newDisplayName.isEmpty()) {
+                etDisplayName.setError("Display name tidak boleh kosong");
+                return;
+            }
+            if (newUsername.isEmpty()) {
+                etUsername.setError("Username tidak boleh kosong");
+                return;
+            }
+            if (!newUsername.matches("^[a-zA-Z0-9_]+$")) {
+                etUsername.setError("Username hanya boleh berisi huruf, angka, dan underscore");
+                return;
+            }
+            if (newEmail.isEmpty()) {
+                etEmail.setError("Email tidak boleh kosong");
+                return;
+            }
+            if (!Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
+                etEmail.setError("Email tidak valid");
                 return;
             }
 
@@ -119,10 +144,20 @@ public class EditProfileActivity extends AppCompatActivity {
                 public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         Toast.makeText(EditProfileActivity.this, "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show();
-                        sessionManager.saveUsername(newUsername); // Perbarui username di session
-                        onBackPressed();
+                        sessionManager.saveUsername(newUsername); // Update username in session
+                        setResult(RESULT_OK); // Set result to indicate success
+                        finish(); // Close activity
                     } else {
                         String errorMessage = "Gagal memperbarui profil: " + response.code();
+                        if (response.code() == 401) {
+                            errorMessage = "Token tidak valid. Silakan login kembali.";
+                            Intent intent = new Intent(EditProfileActivity.this, LoginActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
+                        } else if (response.code() == 409) {
+                            errorMessage = "Username atau email sudah digunakan.";
+                        }
                         try {
                             ResponseBody errorBody = response.errorBody();
                             if (errorBody != null) {

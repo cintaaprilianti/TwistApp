@@ -2,25 +2,37 @@ package com.example.twist.activity.search;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.twist.activity.post.AddTwistActivity;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.twist.R;
 import com.example.twist.activity.home.HomeActivity;
+import com.example.twist.activity.post.AddTwistActivity;
 import com.example.twist.activity.profile.ProfileActivity;
+import com.example.twist.activity.profile.ViewProfileActivity;
 import com.example.twist.adapter.UserSearchAdapter;
+import com.example.twist.api.ApiClient;
+import com.example.twist.api.ApiService;
+import com.example.twist.model.search.SearchUserResponse;
 import com.example.twist.model.search.User;
+import com.example.twist.util.SessionManager;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -28,19 +40,24 @@ public class SearchActivity extends AppCompatActivity {
     private RecyclerView userRecyclerView;
     private BottomNavigationView bottomNav;
     private UserSearchAdapter userAdapter;
-    private List<User> userList;
     private List<User> filteredUserList;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable searchRunnable;
+    private Toast currentToast;
+    private String token;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
+        SessionManager sessionManager = new SessionManager(this);
+        token = sessionManager.getToken();
+
         initViews();
         setupRecyclerView();
         setupSearchFunctionality();
         setupBottomNavigation();
-        loadUsers();
     }
 
     private void initViews() {
@@ -50,9 +67,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        userList = new ArrayList<>();
         filteredUserList = new ArrayList<>();
-
         userAdapter = new UserSearchAdapter(filteredUserList, this::onUserClicked);
         userRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         userRecyclerView.setAdapter(userAdapter);
@@ -65,7 +80,9 @@ public class SearchActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterUsers(s.toString());
+                if (searchRunnable != null) handler.removeCallbacks(searchRunnable);
+                searchRunnable = () -> searchUsersFromApi(s.toString().trim());
+                handler.postDelayed(searchRunnable, 500);
             }
 
             @Override
@@ -74,7 +91,6 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void setupBottomNavigation() {
-        // Set up Bottom Navigation - sama seperti di HomeActivity
         bottomNav.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
     }
 
@@ -85,7 +101,6 @@ public class SearchActivity extends AppCompatActivity {
             finish();
             return true;
         } else if (id == R.id.nav_add) {
-            // Handle add action - sama seperti di HomeActivity
             startActivity(new Intent(this, AddTwistActivity.class));
             return true;
         } else if (id == R.id.nav_profile) {
@@ -96,41 +111,51 @@ public class SearchActivity extends AppCompatActivity {
         return false;
     }
 
-    private void loadUsers() {
-        // Sample data - replace with actual data loading from API/Database
-        userList.clear();
-        userList.add(new User("1", "zaynmalik", "63.8M followers", R.drawable.profile));
-        userList.add(new User("2", "alychlt", "5.1M followers", R.drawable.profile));
-        userList.add(new User("3", "najahkarimah", "1,025 followers", R.drawable.profile));
-        userList.add(new User("4", "rahmarajti_dita", "752 followers", R.drawable.profile));
-        userList.add(new User("5", "cinthe", "371 followers", R.drawable.profile));
-
-        // Initially show all users
-        filteredUserList.clear();
-        filteredUserList.addAll(userList);
-        userAdapter.notifyDataSetChanged();
-    }
-
-    private void filterUsers(String query) {
-        filteredUserList.clear();
-
+    private void searchUsersFromApi(String query) {
         if (query.isEmpty()) {
-            filteredUserList.addAll(userList);
-        } else {
-            String lowerCaseQuery = query.toLowerCase().trim();
-            for (User user : userList) {
-                if (user.getUsername().toLowerCase().contains(lowerCaseQuery)) {
-                    filteredUserList.add(user);
-                }
-            }
+            filteredUserList.clear();
+            userAdapter.notifyDataSetChanged();
+            return;
         }
 
-        userAdapter.notifyDataSetChanged();
+        if (token == null || token.isEmpty()) {
+            showToastOnce("Token tidak ditemukan. Silakan login ulang.");
+            return;
+        }
+
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        Call<SearchUserResponse> call = api.searchUsers("Bearer " + token, query, "users");
+
+        call.enqueue(new Callback<SearchUserResponse>() {
+            @Override
+            public void onResponse(Call<SearchUserResponse> call, Response<SearchUserResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getResults() != null) {
+                    filteredUserList.clear();
+                    for (User user : response.body().getResults()) {
+                        user.setProfileImageResource(R.drawable.profile);
+                        filteredUserList.add(user);
+                    }
+                    userAdapter.notifyDataSetChanged();
+                } else {
+                    showToastOnce("Gagal memuat hasil: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SearchUserResponse> call, Throwable t) {
+                showToastOnce("Koneksi gagal: " + t.getMessage());
+            }
+        });
+    }
+
+    private void showToastOnce(String message) {
+        if (currentToast != null) currentToast.cancel();
+        currentToast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        currentToast.show();
     }
 
     private void onUserClicked(User user) {
-        // Handle user click - navigate to user profile
-        Intent intent = new Intent(this, ProfileActivity.class);
+        Intent intent = new Intent(this, ViewProfileActivity.class);
         intent.putExtra("user_id", user.getId());
         intent.putExtra("username", user.getUsername());
         startActivity(intent);
@@ -139,7 +164,6 @@ public class SearchActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        // Navigate back to home
         startActivity(new Intent(this, HomeActivity.class));
         finish();
     }

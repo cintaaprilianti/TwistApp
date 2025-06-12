@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
-    <!-- Header dengan Menu Hamburger -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -33,7 +32,6 @@
             android:textColor="@android:color/black" />
     </androidx.appcompat.widget.Toolbar>
 
-    <!-- Profil Info -->
     <LinearLayout
         android:id="@+id/profileInfo"
         android:layout_width="match_parent"
@@ -86,7 +84,6 @@
             android:layout_marginTop="16dp" />
     </LinearLayout>
 
-    <!-- Tab Layout untuk Twist, Likes, Replies, Reposts -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
@@ -116,7 +113,6 @@
             android:text="Reposts" />
     </com.google.android.material.tabs.TabLayout>
 
-    <!-- ViewPager untuk konten tab -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
@@ -124,7 +120,6 @@
         app:layout_constraintTop_toBottomOf="@id/tabLayout"
         app:layout_constraintBottom_toTopOf="@id/bottomNav" />
 
-    <!-- Bottom Navigation - Updated to match HomeActivity pattern -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"

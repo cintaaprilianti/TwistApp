@@ -18,15 +18,18 @@ import com.example.twist.activity.post.AddTwistActivity;
 import com.example.twist.activity.post.CommentActivity;
 import com.example.twist.activity.post.CommentListActivity;
 import com.example.twist.activity.profile.ProfileActivity;
+import com.example.twist.activity.search.SearchActivity;
 import com.example.twist.api.ApiClient;
 import com.example.twist.api.ApiService;
 import com.example.twist.adapter.TwistAdapter;
 import com.example.twist.model.post.PostResponse;
 import com.example.twist.util.SessionManager;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import android.text.TextWatcher;
+import android.text.Editable;
 
 import java.util.List;
-
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class HomeActivity extends AppCompatActivity implements HomeView {
 
@@ -92,17 +95,38 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
         } else {
             Toast.makeText(this, "Silakan login untuk melihat twist", Toast.LENGTH_LONG).show();
         }
+
+        setupSearchRedirect();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Muat ulang data saat kembali ke HomeActivity
-        String token = sessionManager.getToken();
-        if (token != null) {
-            presenter = new HomePresenter(this, ApiClient.getClient().create(ApiService.class), token);
-            presenter.loadData();
-        }
+    private void setupSearchRedirect() {
+        // Saat diklik, redirect ke SearchActivity
+        searchBar.setFocusable(false);
+        searchBar.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+            startActivity(intent);
+        });
+
+        // Jika kamu ingin pakai pencarian langsung dari HomeActivity (opsional):
+        /*
+        searchBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String query = s.toString().trim();
+                if (!query.isEmpty()) {
+                    Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+                    intent.putExtra("query", query);
+                    startActivity(intent);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+        */
     }
 
     private boolean onNavigationItemSelected(MenuItem item) {
@@ -131,6 +155,16 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String token = sessionManager.getToken();
+        if (token != null) {
+            presenter = new HomePresenter(this, ApiClient.getClient().create(ApiService.class), token);
+            presenter.loadData();
+        }
     }
 
     @Override

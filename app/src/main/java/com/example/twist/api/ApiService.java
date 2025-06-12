@@ -9,6 +9,7 @@ import com.example.twist.model.post.PostPayload;
 import com.example.twist.model.profile.ProfilePostsResponse;
 import com.example.twist.model.profile.ProfileResponse;
 import com.example.twist.model.profile.UpdateProfileRequest;
+import com.example.twist.model.search.SearchUserResponse;
 
 import java.util.List;
 
@@ -45,7 +46,13 @@ public interface ApiService {
     Call<PostResponse> updatePost(@Header("Authorization") String token, @Path("postId") int postId, @Body PostPayload payload);
 
     @GET("profile/{username}")
-    Call<ProfileResponse> getProfile(@Header("Authorization") String token, @Path("username") String username);
+    Call<ProfileResponse> getProfile(@Header("Authorization") String authHeader, @Path("username") String username);
+
+    @PATCH("users/update")
+    Call<ProfileResponse> updateProfile(@Header("Authorization") String authHeader, @Body UpdateProfileRequest request);
+
+    @DELETE("users/delete")
+    Call<Void> deleteAccount(@Header("Authorization") String token);
 
     @GET("profile/{username}/posts")
     Call<ProfilePostsResponse> getProfilePosts(
@@ -55,9 +62,6 @@ public interface ApiService {
             @Query("limit") int limit,
             @Query("offset") int offset
     );
-
-    @PATCH("profile")
-    Call<ProfileResponse> updateProfile(@Header("Authorization") String token, @Body UpdateProfileRequest profile);
 
     @POST("posts/{postId}/like")
     Call<Void> likePost(@Header("Authorization") String token, @Path("postId") int postId);
@@ -73,4 +77,11 @@ public interface ApiService {
 
     @POST("posts/{postId}/comments")
     Call<Void> addComment(@Header("Authorization") String token, @Path("postId") int postId, @Body CreateCommentRequest request);
+
+    @GET("search")
+    Call<SearchUserResponse> searchUsers(
+            @Header("Authorization") String token,
+            @Query("q") String query,
+            @Query("type") String type
+    );
 }

@@ -45,7 +45,6 @@ public class CommentActivity extends AppCompatActivity {
         backButton = findViewById(R.id.back_button);
         characterCounter = findViewById(R.id.character_counter);
 
-        // Ambil postId dari intent
         postId = getIntent().getIntExtra("postId", -1);
         if (postId == -1) {
             Toast.makeText(this, "Post tidak valid", Toast.LENGTH_SHORT).show();
@@ -53,17 +52,14 @@ public class CommentActivity extends AppCompatActivity {
             return;
         }
 
-        // Set up Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar_container);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // Inisialisasi ApiService
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
 
-        // Aksi untuk Send Button
         sendButton.setOnClickListener(v -> {
             String commentContent = commentInput.getText().toString().trim();
             if (!commentContent.isEmpty() && commentContent.length() <= MAX_CHARACTERS) {
@@ -80,7 +76,6 @@ public class CommentActivity extends AppCompatActivity {
             }
         });
 
-        // Aksi untuk Back Button
         backButton.setOnClickListener(v -> onBackPressed());
 
         // TextWatcher untuk menghitung karakter

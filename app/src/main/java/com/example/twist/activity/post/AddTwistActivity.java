@@ -73,7 +73,6 @@ public class AddTwistActivity extends AppCompatActivity {
             }
         });
 
-        // Aksi untuk Back Button
         backButton.setOnClickListener(v -> onBackPressed());
 
         // TextWatcher untuk menghitung karakter

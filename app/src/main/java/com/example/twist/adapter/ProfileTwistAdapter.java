@@ -1,5 +1,6 @@
 package com.example.twist.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,33 +8,58 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.twist.R;
+import com.example.twist.api.ApiClient;
+import com.example.twist.api.ApiService;
 import com.example.twist.model.post.PostResponse;
+import com.example.twist.util.SessionManager;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ProfileTwistAdapter extends RecyclerView.Adapter<ProfileTwistAdapter.TwistViewHolder> {
 
-    private List<PostResponse> twistList;
+    private List<PostResponse> twistList = new ArrayList<>();
     private int currentUserId;
-    private OnTwistActionListener onTwistActionListener;
+    private OnTwistActionListener listener;
+    private ApiService apiService;
+    private SessionManager sessionManager;
+    private Context context;
 
     public interface OnTwistActionListener {
-        void onEditTwist(int postId);
+        void onEditTwist(int postId, String content);
         void onDeleteTwist(int postId);
+        void onLikeTwist(int postId, boolean isLiked);
+        void onCommentTwist(int postId);
+        void onRepostTwist(int postId);
+    }
+
+    public ProfileTwistAdapter(Context context) {
+        this.context = context;
+        this.apiService = ApiClient.getClient().create(ApiService.class);
+        this.sessionManager = new SessionManager(context);
     }
 
     public void setOnTwistActionListener(OnTwistActionListener listener) {
-        this.onTwistActionListener = listener;
+        this.listener = listener;
     }
 
     public void setTwistList(List<PostResponse> twistList) {
-        this.twistList = twistList;
+        this.twistList = twistList != null ? new ArrayList<>(twistList) : new ArrayList<>();
         notifyDataSetChanged();
+    }
+
+    public List<PostResponse> getTwistList() {
+        return new ArrayList<>(twistList);
     }
 
     public void setCurrentUserId(int currentUserId) {
@@ -51,36 +77,175 @@ public class ProfileTwistAdapter extends RecyclerView.Adapter<ProfileTwistAdapte
     public void onBindViewHolder(@NonNull TwistViewHolder holder, int position) {
         PostResponse post = twistList.get(position);
 
-        // Set data
         holder.username.setText(post.getUser().getUsername());
         holder.postContent.setText(post.getContent());
         holder.likeCount.setText(String.valueOf(post.getLikeCount()));
         holder.commentCount.setText(String.valueOf(post.getCommentCount()));
-        holder.repostCount.setText(String.valueOf(post.getRepostCount()));
+        holder.repostCount.setText(String.valueOf(Math.max(0, post.getRepostCount())));
+        holder.createdAt.setText(post.getCreatedAt());
+        holder.isEdited.setText(post.getIsEdited() ? " (Edited)" : "");
+        holder.isPinned.setVisibility(post.getIsPinned() ? View.VISIBLE : View.GONE);
 
-        // Atur visibilitas tombol more berdasarkan currentUserId
+        holder.profileImage.setImageResource(R.drawable.circular_profile_background);
+
+        holder.likeButton.setSelected(post.getIsLiked());
+
+        holder.likeButton.setOnClickListener(v -> toggleLike(post.getId(), post.getIsLiked(), position));
+
+        holder.commentButton.setOnClickListener(v -> {
+            Toast.makeText(context, "Comment feature not yet implemented", Toast.LENGTH_SHORT).show();
+            if (listener != null) {
+                listener.onCommentTwist(post.getId());
+            }
+        });
+
+        holder.repostButton.setOnClickListener(v -> toggleRepost(post.getId(), post.getIsReposted(), position));
+
         holder.moreButton.setVisibility(post.getUser().getId() == currentUserId ? View.VISIBLE : View.GONE);
-
-        // Aksi tombol more
         holder.moreButton.setOnClickListener(v -> {
-            PopupMenu popupMenu = new PopupMenu(holder.itemView.getContext(), holder.moreButton);
-            popupMenu.getMenu().add("Edit");
-            popupMenu.getMenu().add("Delete");
-            popupMenu.setOnMenuItemClickListener(item -> {
+            PopupMenu popup = new PopupMenu(holder.itemView.getContext(), holder.moreButton);
+            popup.getMenu().add("Edit");
+            popup.getMenu().add("Delete");
+            popup.setOnMenuItemClickListener(item -> {
                 if (item.getTitle().equals("Edit")) {
-                    if (onTwistActionListener != null) {
-                        onTwistActionListener.onEditTwist(post.getId());
+                    if (listener != null) {
+                        listener.onEditTwist(post.getId(), post.getContent());
                     }
                     return true;
                 } else if (item.getTitle().equals("Delete")) {
-                    if (onTwistActionListener != null) {
-                        onTwistActionListener.onDeleteTwist(post.getId());
-                    }
+                    deletePost(post.getId(), position);
                     return true;
                 }
                 return false;
             });
-            popupMenu.show();
+            popup.show();
+        });
+    }
+
+    private void toggleLike(int postId, boolean isLiked, int position) {
+        String token = sessionManager.getToken();
+        if (token == null) {
+            Toast.makeText(context, "Authentication token not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Call<Void> call = apiService.likePost("Bearer " + token, postId);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    PostResponse post = twistList.get(position);
+                    post.setIsLiked(!isLiked);
+                    post.setLikeCount(isLiked ? post.getLikeCount() - 1 : post.getLikeCount() + 1);
+                    notifyItemChanged(position);
+                    if (listener != null) {
+                        listener.onLikeTwist(postId, !isLiked);
+                    }
+                } else {
+                    Toast.makeText(context, "Failed to toggle like: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(context, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void toggleRepost(int postId, boolean isReposted, int position) {
+        String token = sessionManager.getToken();
+        if (token == null) {
+            Toast.makeText(context, "Authentication token not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Call<Void> call = apiService.repostPost("Bearer " + token, postId);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    PostResponse post = twistList.get(position);
+                    boolean newIsReposted = !isReposted;
+                    int newRepostCount = newIsReposted ? post.getRepostCount() + 1 : Math.max(0, post.getRepostCount() - 1);
+                    post.setIsReposted(newIsReposted);
+                    post.setRepostCount(newRepostCount);
+                    notifyItemChanged(position);
+                    if (listener != null) {
+                        listener.onRepostTwist(postId);
+                    }
+                } else {
+                    Toast.makeText(context, "Failed to repost: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(context, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void deletePost(int postId, int position) {
+        String token = sessionManager.getToken();
+        if (token == null) {
+            Toast.makeText(context, "Authentication token not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Call<Void> call = apiService.deletePost("Bearer " + token, postId);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    twistList.remove(position);
+                    notifyItemRemoved(position);
+                    notifyItemRangeChanged(position, twistList.size());
+                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                    if (listener != null) {
+                        listener.onDeleteTwist(postId);
+                    }
+                } else {
+                    String errorMsg = "Failed to delete post: " + response.code();
+                    if (response.code() == 404) {
+                        errorMsg = "Post not found or not allowed";
+                    }
+                    Toast.makeText(context, "Authentication token not found", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                call = apiService.deletePost("Bearer " + token, postId);
+                call.enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            twistList.remove(position);
+                            notifyItemRemoved(position);
+                            notifyItemRangeChanged(position, twistList.size());
+                            Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                            if (listener != null) {
+                                listener.onDeleteTwist(postId);
+                            }
+                        } else {
+                            String errorMsg = "Failed to delete post: " + response.code();
+                            if (response.code() == 404) {
+                                errorMsg = "Post not found or not allowed";
+                            }
+                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Toast.makeText(context, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(context, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -90,9 +255,9 @@ public class ProfileTwistAdapter extends RecyclerView.Adapter<ProfileTwistAdapte
     }
 
     public static class TwistViewHolder extends RecyclerView.ViewHolder {
-        TextView username, postContent, likeCount, commentCount, repostCount;
+        TextView username, postContent, likeCount, commentCount, repostCount, createdAt, isEdited;
         LinearLayout likeButton, commentButton, repostButton;
-        ImageView moreButton;
+        ImageView moreButton, isPinned, profileImage;
 
         public TwistViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -101,6 +266,10 @@ public class ProfileTwistAdapter extends RecyclerView.Adapter<ProfileTwistAdapte
             likeCount = itemView.findViewById(R.id.like_count);
             commentCount = itemView.findViewById(R.id.comment_count);
             repostCount = itemView.findViewById(R.id.repost_count);
+            createdAt = itemView.findViewById(R.id.created_at);
+            isEdited = itemView.findViewById(R.id.is_edited);
+            isPinned = itemView.findViewById(R.id.is_pinned);
+            profileImage = itemView.findViewById(R.id.profile_image);
             likeButton = itemView.findViewById(R.id.like_button);
             commentButton = itemView.findViewById(R.id.comment_button);
             repostButton = itemView.findViewById(R.id.repost_button);

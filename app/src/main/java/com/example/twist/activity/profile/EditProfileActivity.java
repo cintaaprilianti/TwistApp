@@ -15,8 +15,12 @@ import com.example.twist.activity.auth.LoginActivity;
 import com.example.twist.api.ApiClient;
 import com.example.twist.api.ApiService;
 import com.example.twist.model.profile.ProfileResponse;
+import com.example.twist.model.profile.UpdateProfileRequest;
 import com.example.twist.util.SessionManager;
 
+import java.io.IOException;
+
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -68,19 +72,28 @@ public class EditProfileActivity extends AppCompatActivity {
                         etBio.setText(profile.getBio());
                         etEmail.setText(profile.getEmail());
                     } else {
-                        Toast.makeText(EditProfileActivity.this, "Failed to load profile: " + response.code(), Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Failed to load profile. Response: " + response.errorBody());
+                        String errorMsg = "Gagal memuat profil: " + response.code();
+                        try {
+                            ResponseBody errorBody = response.errorBody();
+                            if (errorBody != null) {
+                                errorMsg += ". Detail: " + errorBody.string();
+                            }
+                        } catch (IOException e) {
+                            Log.e(TAG, "Error membaca body error", e);
+                        }
+                        Toast.makeText(EditProfileActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, errorMsg);
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ProfileResponse> call, Throwable t) {
-                    Toast.makeText(EditProfileActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Network error: " + t.getMessage());
+                    Toast.makeText(EditProfileActivity.this, "Error jaringan: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error jaringan: " + t.getMessage());
                 }
             });
         } else {
-            Toast.makeText(this, "No authentication token or username", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Token autentikasi atau username tidak ada", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -93,37 +106,44 @@ public class EditProfileActivity extends AppCompatActivity {
             String newEmail = etEmail.getText().toString().trim();
 
             if (newDisplayName.isEmpty() || newUsername.isEmpty() || newEmail.isEmpty()) {
-                Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Harap isi semua kolom wajib", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            ProfileResponse updatedProfile = new ProfileResponse();
-            updatedProfile.setDisplayName(newDisplayName);
-            updatedProfile.setUsername(newUsername);
-            updatedProfile.setBio(newBio);
-            updatedProfile.setEmail(newEmail);
+            Log.d(TAG, "Memperbarui profil untuk username: " + newUsername);
+            UpdateProfileRequest updatedProfile = new UpdateProfileRequest(newDisplayName, newUsername, newBio, newEmail);
 
-            Call<ProfileResponse> call = apiService.updateProfile("Bearer " + token, currentUsername, updatedProfile);
+            Call<ProfileResponse> call = apiService.updateProfile("Bearer " + token, updatedProfile);
             call.enqueue(new Callback<ProfileResponse>() {
                 @Override
                 public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        Toast.makeText(EditProfileActivity.this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EditProfileActivity.this, "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show();
+                        sessionManager.saveUsername(newUsername); // Perbarui username di session
                         onBackPressed();
                     } else {
-                        Toast.makeText(EditProfileActivity.this, "Failed to update profile: " + response.code(), Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Failed to update profile. Response: " + response.errorBody());
+                        String errorMessage = "Gagal memperbarui profil: " + response.code();
+                        try {
+                            ResponseBody errorBody = response.errorBody();
+                            if (errorBody != null) {
+                                errorMessage += ". Detail: " + errorBody.string();
+                            }
+                        } catch (IOException e) {
+                            Log.e(TAG, "Error membaca body error", e);
+                        }
+                        Toast.makeText(EditProfileActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, errorMessage);
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ProfileResponse> call, Throwable t) {
-                    Toast.makeText(EditProfileActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Network error: " + t.getMessage());
+                    Toast.makeText(EditProfileActivity.this, "Error jaringan: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error jaringan: " + t.getMessage());
                 }
             });
         } else {
-            Toast.makeText(this, "No authentication token found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Token autentikasi tidak ditemukan", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);

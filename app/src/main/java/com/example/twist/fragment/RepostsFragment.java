@@ -25,25 +25,59 @@ import com.example.twist.model.post.PostResponse;
 
 import java.util.List;
 
-public class TwistFragment extends Fragment implements HomeView {
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class RepostsFragment extends Fragment implements HomeView {
 
     private RecyclerView recyclerView;
     private TwistAdapter twistAdapter;
     private ApiService apiService;
     private HomePresenter presenter;
+    private String userId;
+
+    public RepostsFragment() {
+        // Required empty public constructor
+    }
+
+    public static RepostsFragment newInstance(String userId) {
+        RepostsFragment fragment = new RepostsFragment();
+        Bundle args = new Bundle();
+        args.putString("userId", userId);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            userId = getArguments().getString("userId");
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.twist_fragment, container, false);
 
+        initViews(view);
+        setupRecyclerView();
+        setupApiService();
+        loadUserReposts();
+
+        return view;
+    }
+
+    private void initViews(View view) {
         recyclerView = view.findViewById(R.id.twistRecyclerView);
+    }
+
+    private void setupRecyclerView() {
         twistAdapter = new TwistAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(twistAdapter);
 
-        apiService = ApiClient.getClient().create(ApiService.class);
-        String token = requireActivity().getSharedPreferences("TwistPrefs", MODE_PRIVATE).getString("auth_token", null);
-        presenter = new HomePresenter(this, apiService, token);
         twistAdapter.setOnItemInteractionListener(new TwistAdapter.OnItemInteractionListener() {
             @Override
             public void onLikeClicked(int postId) {
@@ -65,27 +99,60 @@ public class TwistFragment extends Fragment implements HomeView {
                 presenter.viewComments(postId);
             }
         });
+    }
 
-        if (token != null) {
-            presenter.loadData();
+    private void setupApiService() {
+        apiService = ApiClient.getClient().create(ApiService.class);
+        String token = requireActivity().getSharedPreferences("TwistPrefs", MODE_PRIVATE).getString("auth_token", null);
+        presenter = new HomePresenter(this, apiService, token);
+    }
+
+    private void loadUserReposts() {
+        String token = requireActivity().getSharedPreferences("TwistPrefs", MODE_PRIVATE).getString("auth_token", null);
+
+        if (token != null && userId != null) {
+            // TODO: Implement API call to get user reposts
+            // For now, show a placeholder message
+            Toast.makeText(getContext(), "Loading reposts from user: " + userId, Toast.LENGTH_SHORT).show();
+
+            // Simulate API call
+            loadRepostsFromApi(token, userId);
         } else {
-            Toast.makeText(getContext(), "Silakan login", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Unable to load reposts", Toast.LENGTH_SHORT).show();
         }
+    }
 
-        return view;
+    private void loadRepostsFromApi(String token, String userId) {
+        // TODO: Replace with actual API endpoint for user reposts
+        // Example: apiService.getUserReposts(token, userId).enqueue(callback);
+
+        showLoading();
+
+        // Simulate API call with delay
+        new android.os.Handler().postDelayed(() -> {
+            hideLoading();
+            // For now, show empty state or sample data
+            showError("Reposts feature coming soon");
+        }, 1000);
     }
 
     @Override
     public void showWelcomeMessage() {
+        // Not needed for reposts fragment
     }
 
     @Override
     public void hideWelcomeMessage() {
+        // Not needed for reposts fragment
     }
 
     @Override
     public void showTwistList(List<PostResponse> posts) {
-        twistAdapter.setTwistList(posts);
+        if (posts != null && !posts.isEmpty()) {
+            twistAdapter.setTwistList(posts);
+        } else {
+            showError("No reposts found");
+        }
     }
 
     @Override
@@ -95,10 +162,13 @@ public class TwistFragment extends Fragment implements HomeView {
 
     @Override
     public void showLoading() {
+        // TODO: Show loading indicator
+        Toast.makeText(getContext(), "Loading...", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void hideLoading() {
+        // TODO: Hide loading indicator
     }
 
     @Override

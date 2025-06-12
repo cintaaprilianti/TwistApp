@@ -31,6 +31,17 @@ public class SessionManager {
         }
     }
 
+    public void saveUsername(String username) {
+        if (username != null && !username.isEmpty()) {
+            prefs.edit()
+                    .putString(KEY_USERNAME, username)
+                    .apply();
+            Log.d(TAG, "Username saved: " + username);
+        } else {
+            Log.w(TAG, "Attempted to save invalid username: " + username);
+        }
+    }
+
     public String getToken() {
         String token = prefs.getString(KEY_TOKEN, null);
         Log.d(TAG, "Token retrieved: " + (token != null ? token.substring(0, 10) + "..." : "null"));

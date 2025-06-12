@@ -27,9 +27,6 @@ public class ProfileResponse {
     @SerializedName("followingCount")
     private Integer followingCount;
 
-    @SerializedName("postsCount")
-    private Integer postsCount;
-
     @SerializedName("createdAt")
     private String createdAt;
 
@@ -38,9 +35,6 @@ public class ProfileResponse {
 
     @SerializedName("isActive")
     private Boolean isActive;
-
-    @SerializedName("status")
-    private String status;
 
     @SerializedName("message")
     private String message;
@@ -104,14 +98,6 @@ public class ProfileResponse {
         this.followingCount = followingCount;
     }
 
-    public Integer getPostsCount() {
-        return postsCount != null ? postsCount : 0;
-    }
-
-    public void setPostsCount(Integer postsCount) {
-        this.postsCount = postsCount;
-    }
-
     public String getCreatedAt() {
         return createdAt != null ? createdAt : "";
     }
@@ -134,14 +120,6 @@ public class ProfileResponse {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
-    }
-
-    public String getStatus() {
-        return status != null ? status : "";
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public String getMessage() {

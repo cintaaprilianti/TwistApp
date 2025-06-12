@@ -24,8 +24,6 @@ import com.example.twist.util.SessionManager;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-import java.io.IOException;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -69,7 +67,7 @@ public class ProfileActivity extends AppCompatActivity {
         Log.d(TAG, "Current UserId: " + currentUserId);
 
         if (currentUsername == null) {
-            Toast.makeText(this, "Username not provided", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Username tidak tersedia", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -107,7 +105,7 @@ public class ProfileActivity extends AppCompatActivity {
                         ProfileResponse profile = response.body();
                         displayName.setText(profile.getDisplayName() != null ? profile.getDisplayName() : profile.getUsername());
                         username.setText("@" + profile.getUsername());
-                        bio.setText(profile.getBio() != null ? profile.getBio() : "No bio");
+                        bio.setText(profile.getBio() != null ? profile.getBio() : "Belum ada bio");
                         followersCount.setText(String.valueOf(profile.getFollowerCount()) + " Followers");
                         followingCount.setText(String.valueOf(profile.getFollowingCount()) + " Following");
                         ProfileTwistPagerAdapter pagerAdapter = (ProfileTwistPagerAdapter) viewPager.getAdapter();
@@ -117,23 +115,27 @@ public class ProfileActivity extends AppCompatActivity {
                             pagerAdapter.notifyDataSetChanged();
                         }
                     } else {
-                        Toast.makeText(ProfileActivity.this, "Failed to load profile: " + response.code(), Toast.LENGTH_SHORT).show();
+                        String errorMsg = "Gagal memuat profil: " + response.code();
+                        if (response.code() == 404) {
+                            errorMsg = "Profil tidak ditemukan";
+                        }
+                        Toast.makeText(ProfileActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                         try {
-                            Log.e(TAG, "Failed to load profile. Response: " + (response.errorBody() != null ? response.errorBody().string() : "No error body"));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            Log.e(TAG, "Gagal memuat profil. Response: " + (response.errorBody() != null ? response.errorBody().string() : "Tidak ada error body"));
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error membaca error body", e);
                         }
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ProfileResponse> call, Throwable t) {
-                    Toast.makeText(ProfileActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Network error: " + t.getMessage());
+                    Toast.makeText(ProfileActivity.this, "Error jaringan: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error jaringan: " + t.getMessage());
                 }
             });
         } else {
-            Toast.makeText(this, "No authentication token found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Token autentikasi tidak ditemukan", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);

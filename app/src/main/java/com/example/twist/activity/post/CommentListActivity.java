@@ -33,13 +33,11 @@ public class CommentListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_comment_list);
 
-        // Inisialisasi komponen
         recyclerView = findViewById(R.id.comment_recycler_view);
         commentAdapter = new CommentAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(commentAdapter);
 
-        // Ambil postId dari intent
         postId = getIntent().getIntExtra("postId", -1);
         if (postId == -1) {
             Toast.makeText(this, "Post tidak valid", Toast.LENGTH_SHORT).show();
@@ -47,7 +45,6 @@ public class CommentListActivity extends AppCompatActivity {
             return;
         }
 
-        // Inisialisasi ApiService
         apiService = ApiClient.getClient().create(ApiService.class);
         String token = getTokenFromStorage();
         if (token != null) {
@@ -61,7 +58,6 @@ public class CommentListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Muat ulang komentar saat kembali ke aktivitas ini
         String token = getTokenFromStorage();
         if (token != null) {
             loadComments(token);

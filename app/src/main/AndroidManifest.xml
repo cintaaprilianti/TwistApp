@@ -17,6 +17,15 @@
         android:theme="@style/Theme.Twist"
         tools:targetApi="31">
         <activity
+            android:name=".activity.profile.ViewProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.search.SearchActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.profile.EditPostActivity"
+            android:exported="false" />
+        <activity
             android:name=".model.profile.SettingsActivity"
             android:exported="false" />
         <activity

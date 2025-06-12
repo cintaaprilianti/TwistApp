@@ -11,6 +11,6 @@ public interface HomeView {
     void showError(String message);
     void showLoading();
     void hideLoading();
-    void showCommentInput(int postId); // Untuk membuka input komentar
-    void showCommentList(int postId); // Untuk membuka daftar komentar
+    void showCommentInput(int postId);
+    void showCommentList(int postId);
 }

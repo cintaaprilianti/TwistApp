@@ -26,60 +26,49 @@ public class PostResponse {
     private boolean isQuotePost;
 
     @SerializedName("parentPostId")
-    private Integer parentPostId; // Nullable
+    private Integer parentPostId;
 
     @SerializedName("isLiked")
     private boolean isLiked;
 
-    @SerializedName("isReposted")
-    private boolean isReposted; // Tambahan untuk status repost
+    @SerializedName("createdAt")
+    private String createdAt; // Tambahkan field createdAt
 
+    // Getter dan Setter
     public int getId() {
         return id;
     }
-
     public String getContent() {
         return content != null ? content : "";
     }
-
     public ProfileResponse getUser() {
         return user;
     }
-
     public int getLikeCount() {
         return likeCount;
     }
-
     public int getCommentCount() {
         return commentCount;
     }
-
     public int getRepostCount() {
         return repostCount;
     }
-
     public boolean getIsQuotePost() {
         return isQuotePost;
     }
-
     public Integer getParentPostId() {
         return parentPostId;
     }
-
     public boolean getIsLiked() {
         return isLiked;
     }
-
-    public boolean getIsReposted() {
-        return isReposted;
-    }
-
-    // Setter untuk pengujian atau logika lokal
     public void setIsLiked(boolean isLiked) {
         this.isLiked = isLiked;
     }
-
-    public void setIsReposted(boolean isReposted) {
-        this.isReposted = isReposted;
+    public String getCreatedAt() {
+        return createdAt != null ? createdAt : "";
+    }
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
     }
 }

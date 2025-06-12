@@ -2,19 +2,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_home"
-        android:icon="@drawable/home"
+        android:icon="@drawable/ic_home"
         android:title="Home"
         android:layout_width="60dp"
         android:layout_height="60dp"/>
     <item
         android:id="@+id/nav_add"
-        android:icon="@drawable/add"
+        android:icon="@drawable/ic_add"
         android:title="Add"
         android:layout_width="60dp"
         android:layout_height="60dp"/>
     <item
         android:id="@+id/nav_profile"
-        android:icon="@drawable/profile"
+        android:icon="@drawable/ic_profile"
         android:title="Profile"
         android:layout_width="60dp"
         android:layout_height="60dp"/>

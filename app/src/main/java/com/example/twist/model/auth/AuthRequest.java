@@ -5,7 +5,7 @@ public class AuthRequest {
     private String password;
     private String email;
     private String confirmPassword;
-    private String token; // Untuk reset password
+    private String token;
 
     public AuthRequest(String username, String password, String email, String confirmPassword) {
         this.username = username;

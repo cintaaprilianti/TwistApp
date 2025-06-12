@@ -3,9 +3,7 @@ package com.example.twist.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,7 +17,6 @@ public class TwistAdapter extends RecyclerView.Adapter<TwistAdapter.TwistViewHol
     private List<PostResponse> twistList;
     private OnItemInteractionListener listener;
 
-    // Interface untuk callback
     public interface OnItemInteractionListener {
         void onLikeClicked(int postId);
         void onRepostClicked(int postId);
@@ -51,14 +48,17 @@ public class TwistAdapter extends RecyclerView.Adapter<TwistAdapter.TwistViewHol
         holder.commentCount.setText(String.valueOf(post.getCommentCount()));
         holder.repostCount.setText(String.valueOf(post.getRepostCount()));
 
-        // Set status like dan repost (opsional, bisa diubah ikon sesuai isLiked/isReposted)
-        // Misalnya, ubah ikon jika isLiked true
-        // holder.likeIcon.setImageResource(post.getIsLiked() ? R.drawable.liked : R.drawable.love);
+        holder.likeButton.setSelected(post.getIsLiked());
 
-        // Set klik listener
         holder.likeButton.setOnClickListener(v -> {
-            if (listener != null) listener.onLikeClicked(post.getId());
+            if (listener != null) {
+                boolean newState = !post.getIsLiked();
+                post.setIsLiked(newState);
+                holder.likeButton.setSelected(newState);
+                listener.onLikeClicked(post.getId());
+            }
         });
+
         holder.repostButton.setOnClickListener(v -> {
             if (listener != null) listener.onRepostClicked(post.getId());
         });
@@ -88,8 +88,8 @@ public class TwistAdapter extends RecyclerView.Adapter<TwistAdapter.TwistViewHol
             repostCount = itemView.findViewById(R.id.repost_count);
             viewCommentsButton = itemView.findViewById(R.id.view_comments_button);
             likeButton = itemView.findViewById(R.id.like_button);
-            repostButton = itemView.findViewById(R.id.repost_button); // Perbaikan di sini
-            commentButton = itemView.findViewById(R.id.comment_button); // Perbaikan di sini
+            repostButton = itemView.findViewById(R.id.repost_button);
+            commentButton = itemView.findViewById(R.id.comment_button);
         }
     }
 }

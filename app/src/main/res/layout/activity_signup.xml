@@ -54,10 +54,10 @@
             android:padding="12dp">
 
             <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_marginEnd="12dp"
-                android:src="@drawable/user"
+                android:src="@drawable/ic_profile"
                 android:contentDescription="User icon" />
 
             <EditText
@@ -94,10 +94,10 @@
             android:padding="12dp">
 
             <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_marginEnd="12dp"
-                android:src="@drawable/email"
+                android:src="@drawable/ic_email"
                 android:contentDescription="Email icon" />
 
             <EditText
@@ -134,10 +134,10 @@
             android:padding="12dp">
 
             <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_marginEnd="12dp"
-                android:src="@drawable/password"
+                android:src="@drawable/ic_lock"
                 android:contentDescription="Password icon" />
 
             <EditText
@@ -174,10 +174,10 @@
             android:padding="12dp">
 
             <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_marginEnd="12dp"
-                android:src="@drawable/password"
+                android:src="@drawable/ic_lock"
                 android:contentDescription="Confirm password icon" />
 
             <EditText

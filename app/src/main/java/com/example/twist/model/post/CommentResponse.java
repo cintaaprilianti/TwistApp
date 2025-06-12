@@ -14,7 +14,7 @@ public class CommentResponse {
     private ProfileResponse user;
 
     @SerializedName("createdAt")
-    private String createdAt; // atau Date jika backend mengembalikan format tanggal
+    private String createdAt;
 
     public int getId() {
         return id;

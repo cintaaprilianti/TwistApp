@@ -2,6 +2,7 @@ package com.example.twist.activity.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -14,6 +15,7 @@ import com.example.twist.api.ApiClient;
 import com.example.twist.api.ApiService;
 import com.example.twist.model.auth.AuthRequest;
 import com.example.twist.model.auth.AuthResponse;
+import com.example.twist.model.auth.User;
 import com.example.twist.util.SessionManager;
 
 import retrofit2.Call;
@@ -61,25 +63,35 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        Call<AuthResponse> call = apiService.login(new AuthRequest(username, password));
-        call.enqueue(new Callback<>() {
+        AuthRequest authRequest = new AuthRequest(username, password);
+        Call<AuthResponse> call = apiService.login(authRequest);
+        call.enqueue(new Callback<AuthResponse>() {
             @Override
             public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    sessionManager.saveToken(response.body().getToken());
-                    Toast.makeText(com.example.twist.activity.auth.LoginActivity.this, "Login berhasil", Toast.LENGTH_SHORT).show();
+                    AuthResponse authResponse = response.body();
+                    User user = authResponse.getUser();
+                    if (user != null) {
+                        sessionManager.saveAuthData(authResponse.getToken(), user.getUsername(), user.getId());
+                        Toast.makeText(LoginActivity.this, "Login berhasil", Toast.LENGTH_SHORT).show();
 
-                    Intent intent = new Intent(com.example.twist.activity.auth.LoginActivity.this, com.example.twist.activity.home.HomeActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
+                        Intent intent = new Intent(LoginActivity.this, com.example.twist.activity.home.HomeActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Login gagal: Data pengguna tidak ditemukan", Toast.LENGTH_SHORT).show();
+                        Log.e("LoginActivity", "User data is null in AuthResponse");
+                    }
                 } else {
-                    Toast.makeText(com.example.twist.activity.auth.LoginActivity.this, "Login gagal. Periksa kembali kredensial Anda.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Login gagal. Periksa kembali kredensial Anda.", Toast.LENGTH_SHORT).show();
+                    Log.e("LoginActivity", "Login failed with code: " + response.code() + ", Message: " + (response.errorBody() != null ? response.errorBody().toString() : "No details"));
                 }
             }
 
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
-                Toast.makeText(com.example.twist.activity.auth.LoginActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("LoginActivity", "Network error: " + t.getMessage(), t);
             }
         });
     }

@@ -40,7 +40,6 @@ public class CommentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_comment);
 
-        // Inisialisasi komponen
         commentInput = findViewById(R.id.comment_input);
         sendButton = findViewById(R.id.send_button);
         backButton = findViewById(R.id.back_button);
@@ -114,7 +113,6 @@ public class CommentActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     Log.d("CommentActivity", "Comment sent successfully for postId: " + postId);
                     Toast.makeText(CommentActivity.this, "Komentar berhasil dikirim", Toast.LENGTH_SHORT).show();
-                    // Kembali ke CommentListActivity dan segarkan
                     Intent intent = new Intent(CommentActivity.this, CommentListActivity.class);
                     intent.putExtra("postId", postId);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);

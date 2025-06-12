@@ -15,7 +15,9 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface ApiService {
 
@@ -37,11 +39,20 @@ public interface ApiService {
     @POST("posts")
     Call<Void> createPost(@Header("Authorization") String token, @Body PostPayload postPayload);
 
-    @GET("profile")
-    Call<ProfileResponse> getProfile(@Header("Authorization") String token);
+    @GET("profile/{username}")
+    Call<ProfileResponse> getProfile(@Header("Authorization") String token, @Path("username") String username);
 
-    @GET("profile/posts")
-    Call<List<PostResponse>> getUserPosts(@Header("Authorization") String token);
+    @GET("profile/{username}/posts")
+    Call<ProfileResponse> getProfilePosts(
+            @Header("Authorization") String token,
+            @Path("username") String username,
+            @Query("tab") String tab,
+            @Query("limit") int limit,
+            @Query("offset") int offset
+    );
+
+    @PUT("profile/{username}")
+    Call<ProfileResponse> updateProfile(@Header("Authorization") String token, @Path("username") String username, @Body ProfileResponse profile);
 
     @POST("posts/{postId}/like")
     Call<Void> likePost(@Header("Authorization") String token, @Path("postId") int postId);

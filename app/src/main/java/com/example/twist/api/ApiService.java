@@ -20,10 +20,12 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
+    // auth //
     @POST("auth/register")
     Call<AuthResponse> register(@Body AuthRequest request);
 
@@ -36,32 +38,15 @@ public interface ApiService {
     @POST("auth/reset-password")
     Call<AuthResponse> resetPassword(@Body AuthRequest request);
 
+    // posts //
     @GET("posts")
     Call<List<PostResponse>> getPosts(@Header("Authorization") String token);
 
     @POST("posts")
     Call<Void> createPost(@Header("Authorization") String token, @Body PostPayload postPayload);
 
-    @PATCH("posts/{postId}")
+    @PUT("posts/{postId}")
     Call<PostResponse> updatePost(@Header("Authorization") String token, @Path("postId") int postId, @Body PostPayload payload);
-
-    @GET("profile/{username}")
-    Call<ProfileResponse> getProfile(@Header("Authorization") String authHeader, @Path("username") String username);
-
-    @PATCH("users/update")
-    Call<ProfileResponse> updateProfile(@Header("Authorization") String authHeader, @Body UpdateProfileRequest request);
-
-    @DELETE("users/delete")
-    Call<Void> deleteAccount(@Header("Authorization") String token);
-
-    @GET("profile/{username}/posts")
-    Call<ProfilePostsResponse> getProfilePosts(
-            @Header("Authorization") String token,
-            @Path("username") String username,
-            @Query("tab") String tab,
-            @Query("limit") int limit,
-            @Query("offset") int offset
-    );
 
     @POST("posts/{postId}/like")
     Call<Void> likePost(@Header("Authorization") String token, @Path("postId") int postId);
@@ -78,6 +63,36 @@ public interface ApiService {
     @POST("posts/{postId}/comments")
     Call<Void> addComment(@Header("Authorization") String token, @Path("postId") int postId, @Body CreateCommentRequest request);
 
+    // profile //
+    @GET("profile/{username}")
+    Call<ProfileResponse> getProfile(@Header("Authorization") String authHeader, @Path("username") String username);
+
+    @GET("profile/{username}/posts")
+    Call<ProfilePostsResponse> getProfilePosts(
+            @Header("Authorization") String token,
+            @Path("username") String username,
+            @Query("tab") String tab,
+            @Query("limit") int limit,
+            @Query("offset") int offset
+    );
+
+    // users //
+    @PATCH("users/update")
+    Call<ProfileResponse> updateProfile(@Header("Authorization") String authHeader, @Body UpdateProfileRequest request);
+
+    @DELETE("users/delete")
+    Call<Void> deleteAccount(@Header("Authorization") String token);
+
+    @POST("users/{userId}/follow")
+    Call<Void> followUser(@Header("Authorization") String authToken, @Path("userId") String userId);
+
+    @DELETE("users/{userId}/follow")
+    Call<Void> unfollowUser(@Header("Authorization") String authToken, @Path("userId") String userId);
+
+    @GET("users/{userId}/posts")
+    Call<List<PostResponse>> getUserPosts(@Header("Authorization") String authHeader, @Path("userId") String userId);
+
+    // search //
     @GET("search")
     Call<SearchUserResponse> searchUsers(
             @Header("Authorization") String token,

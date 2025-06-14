@@ -1,6 +1,8 @@
 package com.example.twist.adapter;
 
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -22,10 +24,12 @@ public class ProfileTwistPagerAdapter extends FragmentStateAdapter {
 
     public void setUsername(String username) {
         this.username = username;
+        Log.d("ProfileTwistPagerAdapter", "Username set: " + username);
     }
 
     public void setCurrentUserId(int currentUserId) {
         this.currentUserId = currentUserId;
+        Log.d("ProfileTwistPagerAdapter", "CurrentUserId set: " + currentUserId);
     }
 
     @NonNull
@@ -34,6 +38,7 @@ public class ProfileTwistPagerAdapter extends FragmentStateAdapter {
         Bundle args = new Bundle();
         args.putString("username", username);
         args.putInt("userId", currentUserId);
+        Log.d("ProfileTwistPagerAdapter", "Creating fragment for position: " + position + ", username: " + username + ", userId: " + currentUserId);
 
         switch (position) {
             case 0:

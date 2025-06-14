@@ -44,6 +44,14 @@ public class ProfileRepliesFragment extends Fragment {
     private boolean hasMore = true;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        currentPage = 0; // Reset pagination
+        hasMore = true;
+        isLoading = false;
+    }
+
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile_twist, container, false);
 
@@ -56,6 +64,11 @@ public class ProfileRepliesFragment extends Fragment {
         sessionManager = new SessionManager(requireContext());
         username = getArguments() != null ? getArguments().getString("username") : null;
         Log.d(TAG, "Username: " + username);
+
+        if (username == null) {
+            Toast.makeText(getContext(), "Username tidak tersedia", Toast.LENGTH_SHORT).show();
+            return view;
+        }
 
         setupRecyclerView();
         loadReplies();
@@ -92,10 +105,12 @@ public class ProfileRepliesFragment extends Fragment {
 
             @Override
             public void onDeleteTwist(int postId) {
+
             }
 
             @Override
             public void onLikeTwist(int postId, boolean isLiked) {
+
             }
 
             @Override
@@ -105,15 +120,16 @@ public class ProfileRepliesFragment extends Fragment {
 
             @Override
             public void onRepostTwist(int postId) {
+
             }
         });
     }
 
     private void loadReplies() {
-        if (username != null && !isLoading && hasMore) {
+        if (!isLoading && hasMore) {
             isLoading = true;
             String token = sessionManager.getToken();
-            Log.d(TAG, "Token: " + (token != null ? token.substring(0, 10) + "..." : "null"));
+            Log.d(TAG, "Loading replies: page=" + currentPage + ", offset=" + (currentPage * 10) + ", token=" + (token != null ? token.substring(0, 10) + "..." : "null"));
             if (token != null) {
                 Call<ProfilePostsResponse> call = apiService.getProfilePosts("Bearer " + token, username, "replies", 10, currentPage * 10);
                 call.enqueue(new Callback<ProfilePostsResponse>() {
@@ -124,9 +140,18 @@ public class ProfileRepliesFragment extends Fragment {
                         if (response.isSuccessful() && response.body() != null) {
                             ProfilePostsResponse postsResponse = response.body();
                             List<PostResponse> replies = postsResponse.getPosts();
+                            Log.d(TAG, "Replies count: " + (replies != null ? replies.size() : "null"));
+                            if (replies != null) {
+                                for (PostResponse reply : replies) {
+                                    Log.d(TAG, "Reply ID: " + reply.getId() + ", Content: " + reply.getContent());
+                                }
+                            }
                             hasMore = postsResponse.getPagination().isHasMore();
+                            Log.d(TAG, "Has more: " + hasMore);
                             List<PostResponse> currentList = currentPage == 0 ? new ArrayList<>() : adapter.getTwistList();
-                            currentList.addAll(replies);
+                            if (replies != null) {
+                                currentList.addAll(replies);
+                            }
                             adapter.setTwistList(currentList);
                             int currentUserId = getActivity() instanceof ProfileActivity
                                     ? ((ProfileActivity) getActivity()).getCurrentUserId() : -1;
@@ -141,9 +166,9 @@ public class ProfileRepliesFragment extends Fragment {
                             }
                             Toast.makeText(getContext(), errorMsg, Toast.LENGTH_SHORT).show();
                             try {
-                                Log.e(TAG, "Gagal memuat balasan. Response: " + (response.errorBody() != null ? response.errorBody().string() : "Tidak ada error body"));
+                                Log.e(TAG, "Error response: " + (response.errorBody() != null ? response.errorBody().string() : "No error body"));
                             } catch (IOException e) {
-                                Log.e(TAG, "Error membaca error body", e);
+                                Log.e(TAG, "Error reading error body", e);
                             }
                         }
                     }
@@ -152,15 +177,14 @@ public class ProfileRepliesFragment extends Fragment {
                     public void onFailure(Call<ProfilePostsResponse> call, Throwable t) {
                         isLoading = false;
                         Toast.makeText(getContext(), "Error jaringan: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Error jaringan: " + t.getMessage(), t);
+                        Log.e(TAG, "Network error: " + t.getMessage(), t);
                     }
                 });
             } else {
                 isLoading = false;
                 Toast.makeText(getContext(), "Token autentikasi tidak ditemukan", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Token is null");
             }
-        } else if (username == null) {
-            Toast.makeText(getContext(), "Username tidak tersedia", Toast.LENGTH_SHORT).show();
         }
     }
 }

@@ -2,6 +2,7 @@ package com.example.twist.activity.profile;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -15,15 +16,27 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.twist.R;
 import com.example.twist.activity.home.HomeActivity;
 import com.example.twist.activity.post.AddTwistActivity;
+import com.example.twist.api.ApiClient;
+import com.example.twist.api.ApiService;
 import com.example.twist.fragment.LikesFragment;
 import com.example.twist.fragment.RepliesFragment;
 import com.example.twist.fragment.RepostsFragment;
 import com.example.twist.fragment.TwistFragment;
+import com.example.twist.model.profile.ProfileResponse;
+import com.example.twist.util.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import java.io.IOException;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class ViewProfileActivity extends AppCompatActivity {
+
+    private static final String TAG = "ViewProfileActivity";
 
     private TextView displayNameText;
     private TextView usernameText;
@@ -35,7 +48,6 @@ public class ViewProfileActivity extends AppCompatActivity {
     private ViewPager2 viewPager;
     private BottomNavigationView bottomNav;
 
-    // Data user yang akan ditampilkan
     private String userId;
     private String displayName;
     private String username;
@@ -43,10 +55,16 @@ public class ViewProfileActivity extends AppCompatActivity {
     private int followerCount;
     private boolean isFollowing;
 
+    private ApiService apiService;
+    private SessionManager sessionManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_profile);
+
+        apiService = ApiClient.getClient().create(ApiService.class);
+        sessionManager = new SessionManager(this);
 
         initViews();
         setupData();
@@ -65,10 +83,12 @@ public class ViewProfileActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
         bottomNav = findViewById(R.id.bottomNav);
+
+        displayNameText.setText("Loading...");
+        bioText.setText("Loading...");
     }
 
     private void setupData() {
-        // Ambil data user dari intent
         userId = getIntent().getStringExtra("userId");
         displayName = getIntent().getStringExtra("displayName");
         username = getIntent().getStringExtra("username");
@@ -76,14 +96,80 @@ public class ViewProfileActivity extends AppCompatActivity {
         followerCount = getIntent().getIntExtra("followerCount", 0);
         isFollowing = getIntent().getBooleanExtra("isFollowing", false);
 
-        // Set data ke views
-        displayNameText.setText(displayName != null ? displayName : "Unknown User");
-        usernameText.setText(username != null ? "@" + username : "@unknown");
-        bioText.setText(bio != null ? bio : "No bio available");
-        followerCountText.setText(followerCount + " followers");
+        Log.d(TAG, "Received userId: " + userId);
+        Log.d(TAG, "Received displayName: " + displayName);
+        Log.d(TAG, "Received username: " + username);
+        Log.d(TAG, "Received bio: " + bio);
+        Log.d(TAG, "Received followerCount: " + followerCount);
+        Log.d(TAG, "Received isFollowing: " + isFollowing);
 
-        // Set status follow button
-        updateFollowButton();
+        if (username == null || username.isEmpty()) {
+            Toast.makeText(this, "Username not available", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        if (displayName != null && bio != null) {
+            displayNameText.setText(displayName);
+            usernameText.setText("@" + username);
+            bioText.setText(bio);
+            followerCountText.setText(followerCount + " followers");
+            updateFollowButton();
+        } else {
+            fetchProfileFromApi();
+        }
+    }
+
+    private void fetchProfileFromApi() {
+        String authToken = sessionManager.getToken();
+        if (authToken == null || authToken.isEmpty()) {
+            Toast.makeText(this, "Authentication token missing", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Authentication token is missing");
+            finish();
+            return;
+        }
+
+        String authHeader = "Bearer " + authToken;
+        Call<ProfileResponse> call = apiService.getProfile(authHeader, username);
+        call.enqueue(new Callback<ProfileResponse>() {
+            @Override
+            public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ProfileResponse profile = response.body();
+                    displayName = profile.getDisplayName();
+                    bio = profile.getBio();
+                    followerCount = profile.getFollowerCount();
+
+                    Log.d(TAG, "API displayName: " + displayName);
+                    Log.d(TAG, "API bio: " + bio);
+                    Log.d(TAG, "API followerCount: " + followerCount);
+                    Log.d(TAG, "API isFollowing: " + isFollowing);
+
+                    displayNameText.setText(displayName != null ? displayName : "Unknown User");
+                    usernameText.setText("@" + username);
+                    bioText.setText(bio != null ? bio : "No bio available");
+                    followerCountText.setText(followerCount + " followers");
+                    updateFollowButton();
+                } else {
+                    String errorMessage = "Failed to load profile: " + response.code();
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMessage += "\nDetail: " + response.errorBody().string();
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error reading errorBody", e);
+                    }
+                    Toast.makeText(ViewProfileActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    Log.e(TAG, errorMessage);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ProfileResponse> call, Throwable t) {
+                Log.e(TAG, "Network error: " + t.getMessage(), t);
+                Toast.makeText(ViewProfileActivity.this, "Network Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void updateFollowButton() {
@@ -97,59 +183,111 @@ public class ViewProfileActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        // Back button
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        backButton.setOnClickListener(v -> finish());
 
-        // Follow button
-        followButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleFollowClick();
-            }
-        });
+        followButton.setOnClickListener(v -> handleFollowClick());
     }
 
     private void handleFollowClick() {
+        if (userId == null || userId.isEmpty()) {
+            Toast.makeText(this, "User ID not available.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "handleFollowClick: userId is null or empty");
+            return;
+        }
+
+        String authToken = sessionManager.getToken();
+        if (authToken == null || authToken.isEmpty()) {
+            Toast.makeText(this, "Authentication token missing. Please log in again.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "handleFollowClick: Authentication token is missing.");
+            return;
+        }
+
+        String authHeader = "Bearer " + authToken;
+        Log.d(TAG, "Auth Header: " + authHeader);
+
         if (isFollowing) {
-            // Unfollow user
-            unfollowUser();
+            unfollowUser(authHeader, userId);
         } else {
-            // Follow user
-            followUser();
+            followUser(authHeader, userId);
         }
     }
 
-    private void followUser() {
-        // TODO: Implement API call to follow user
-        // For now, just simulate the action
-        isFollowing = true;
-        followerCount++;
-        followerCountText.setText(followerCount + " followers");
-        updateFollowButton();
-        Toast.makeText(this, "Now following " + displayName, Toast.LENGTH_SHORT).show();
+    private void followUser(String authHeader, String targetUserId) {
+        Log.d(TAG, "Attempting to follow user: " + targetUserId + " with token: " + authHeader);
+        Call<Void> call = apiService.followUser(authHeader, targetUserId);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Follow successful. Code: " + response.code());
+                    isFollowing = true;
+                    followerCount++;
+                    followerCountText.setText(followerCount + " followers");
+                    updateFollowButton();
+                    Toast.makeText(ViewProfileActivity.this, "Now following " + (displayName != null ? displayName : username), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errorMessage = "Failed to follow: " + response.code();
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBodyString = response.errorBody().string();
+                            errorMessage += "\nDetail: " + errorBodyString;
+                            Log.e(TAG, "Follow Error Response (Code " + response.code() + "): " + errorBodyString);
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error reading errorBody", e);
+                    }
+                    Toast.makeText(ViewProfileActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e(TAG, "Follow Network Failure: " + t.getMessage(), t);
+                Toast.makeText(ViewProfileActivity.this, "Network Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
-    private void unfollowUser() {
-        // TODO: Implement API call to unfollow user
-        // For now, just simulate the action
-        isFollowing = false;
-        followerCount--;
-        followerCountText.setText(followerCount + " followers");
-        updateFollowButton();
-        Toast.makeText(this, "Unfollowed " + displayName, Toast.LENGTH_SHORT).show();
+    private void unfollowUser(String authHeader, String targetUserId) {
+        Log.d(TAG, "Attempting to unfollow user: " + targetUserId + " with token: " + authHeader);
+        Call<Void> call = apiService.unfollowUser(authHeader, targetUserId);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Unfollow successful. Code: " + response.code());
+                    isFollowing = false;
+                    followerCount--;
+                    followerCountText.setText(followerCount + " followers");
+                    updateFollowButton();
+                    Toast.makeText(ViewProfileActivity.this, "Unfollowed " + (displayName != null ? displayName : username), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errorMessage = "Failed to unfollow: " + response.code();
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBodyString = response.errorBody().string();
+                            errorMessage += "\nDetail: " + errorBodyString;
+                            Log.e(TAG, "Unfollow Error Response (Code " + response.code() + "): " + errorBodyString);
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error reading errorBody", e);
+                    }
+                    Toast.makeText(ViewProfileActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e(TAG, "Unfollow Network Failure: " + t.getMessage(), t);
+                Toast.makeText(ViewProfileActivity.this, "Network Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void setupTabs() {
-        // Setup ViewPager2 dengan adapter
-        ProfileTabsAdapter adapter = new ProfileTabsAdapter(this, userId);
+        ProfileTabsAdapter adapter = new ProfileTabsAdapter(this, userId, username);
         viewPager.setAdapter(adapter);
 
-        // Setup TabLayout dengan ViewPager2
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> {
                     switch (position) {
@@ -171,9 +309,7 @@ public class ViewProfileActivity extends AppCompatActivity {
     }
 
     private void setupBottomNavigation() {
-        // Set profile as selected since we're in profile activity
         bottomNav.setSelectedItemId(R.id.nav_profile);
-
         bottomNav.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
     }
 
@@ -181,47 +317,58 @@ public class ViewProfileActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.nav_home) {
             startActivity(new Intent(this, HomeActivity.class));
-            finish(); // Close current activity
+            finish();
             return true;
         } else if (id == R.id.nav_add) {
             startActivity(new Intent(this, AddTwistActivity.class));
             return true;
         } else if (id == R.id.nav_profile) {
-            // Already in profile, do nothing or show current user's profile
             return true;
         }
         return false;
     }
 
     public void showFollowers(View view) {
-        // TODO: Implement show followers functionality
         Toast.makeText(this, "Show followers: " + followerCount, Toast.LENGTH_SHORT).show();
     }
 
-    // Inner class untuk adapter tabs (jika belum ada)
     private static class ProfileTabsAdapter extends androidx.viewpager2.adapter.FragmentStateAdapter {
         private String userId;
+        private String username;
 
-        public ProfileTabsAdapter(androidx.fragment.app.FragmentActivity fragmentActivity, String userId) {
+        public ProfileTabsAdapter(androidx.fragment.app.FragmentActivity fragmentActivity, String userId, String username) {
             super(fragmentActivity);
             this.userId = userId;
+            this.username = username;
         }
 
         @Override
         public androidx.fragment.app.Fragment createFragment(int position) {
-            // TODO: Return appropriate fragments for each tab
-            // For now, return empty fragments
+            Bundle args = new Bundle();
+            args.putString("userId", userId);
+            args.putString("username", username);
+
             switch (position) {
                 case 0:
-                    return new TwistFragment(); // Fragment untuk Twist
+                    TwistFragment twistFragment = TwistFragment.newInstance(userId, username);
+                    twistFragment.setArguments(args);
+                    return twistFragment;
                 case 1:
-                    return new LikesFragment(); // Fragment untuk Likes
+                    LikesFragment likesFragment = LikesFragment.newInstance(userId, username);
+                    likesFragment.setArguments(args);
+                    return likesFragment;
                 case 2:
-                    return new RepliesFragment(); // Fragment untuk Replies
+                    RepliesFragment repliesFragment = RepliesFragment.newInstance(userId, username);
+                    repliesFragment.setArguments(args);
+                    return repliesFragment;
                 case 3:
-                    return new RepostsFragment(); // Fragment untuk Reposts
+                    RepostsFragment repostsFragment = RepostsFragment.newInstance(userId, username);
+                    repostsFragment.setArguments(args);
+                    return repostsFragment;
                 default:
-                    return new TwistFragment();
+                    TwistFragment defaultFragment = TwistFragment.newInstance(userId, username);
+                    defaultFragment.setArguments(args);
+                    return defaultFragment;
             }
         }
 

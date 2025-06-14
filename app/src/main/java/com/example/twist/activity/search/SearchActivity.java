@@ -156,7 +156,7 @@ public class SearchActivity extends AppCompatActivity {
 
     private void onUserClicked(User user) {
         Intent intent = new Intent(this, ViewProfileActivity.class);
-        intent.putExtra("user_id", user.getId());
+        intent.putExtra("userId", user.getId());
         intent.putExtra("username", user.getUsername());
         startActivity(intent);
     }

@@ -1,6 +1,7 @@
 package com.example.twist.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,6 +56,7 @@ public class ProfileTwistAdapter extends RecyclerView.Adapter<ProfileTwistAdapte
 
     public void setTwistList(List<PostResponse> twistList) {
         this.twistList = twistList != null ? new ArrayList<>(twistList) : new ArrayList<>();
+        Log.d("ProfileTwistAdapter", "Twist list updated, size: " + this.twistList.size());
         notifyDataSetChanged();
     }
 
@@ -210,36 +212,8 @@ public class ProfileTwistAdapter extends RecyclerView.Adapter<ProfileTwistAdapte
                     if (response.code() == 404) {
                         errorMsg = "Post not found or not allowed";
                     }
-                    Toast.makeText(context, "Authentication token not found", Toast.LENGTH_SHORT).show();
-                    return;
+                    Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show();
                 }
-
-                call = apiService.deletePost("Bearer " + token, postId);
-                call.enqueue(new Callback<Void>() {
-                    @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
-                        if (response.isSuccessful()) {
-                            twistList.remove(position);
-                            notifyItemRemoved(position);
-                            notifyItemRangeChanged(position, twistList.size());
-                            Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
-                            if (listener != null) {
-                                listener.onDeleteTwist(postId);
-                            }
-                        } else {
-                            String errorMsg = "Failed to delete post: " + response.code();
-                            if (response.code() == 404) {
-                                errorMsg = "Post not found or not allowed";
-                            }
-                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
-                        Toast.makeText(context, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
             }
 
             @Override
